@@ -301,11 +301,11 @@ export default function EditMember({
                     )}
                   </div>
                   {updating ? (
-                    <div className="bottom-2 w-full fixed flex justify-center items-center">
+                    <div className="bottom-2 absolute flex justify-center items-center">
                       <Loader show />
                     </div>
                   ) : (
-                    <div className="flex justify-center w-full bottom-2 fixed z-50 ">
+                    <div className="flex justify-center bottom-2 w-full absolute z-50">
                       <button
                         type="button"
                         disabled={!member.name}
