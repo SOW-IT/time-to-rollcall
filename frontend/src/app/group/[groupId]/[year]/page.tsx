@@ -184,7 +184,7 @@ export default function Group({
             <button
               type="button"
               onClick={openExportModal}
-              className="flex justify-end gap-2 items-center text-center text-gray-700 text-sm rounded-lg py-2 px-2 bg-gray-200"
+              className="flex justify-end gap-2 items-center text-center text-gray-700 hover:text-black active:text-black text-sm rounded-lg py-2 px-2 bg-gray-200"
             >
               <ArrowDownTrayIcon className="cursor-pointer w-6 h-6 text-gray-500" />
               <p>EXPORT MULTIPLE</p>
@@ -200,7 +200,7 @@ export default function Group({
               <div className="flex justify-between">
                 <ListboxButton
                   disabled={years.length === 0}
-                  className="flex justify-between items-center appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-600"
+                  className="flex justify-between items-center appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-600 hover:text-black active:text-black"
                 >
                   {params.year === currentYearStr
                     ? "Previous Years"
@@ -237,7 +237,7 @@ export default function Group({
               <div key={i}>
                 <hr className="h-[1px] border-t-0 bg-neutral-300" />
                 <div
-                  className="cursor-pointer px-4 py-6 hover:bg-gray-100"
+                  className="cursor-pointer px-4 py-6 active:bg-gray-100"
                   onClick={() =>
                     router.push(
                       `${Path.Group}/${group.id}/${params.year}/event/${event.id}`

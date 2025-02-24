@@ -12,8 +12,8 @@ export default function AttendanceSearchBar({
   setSearchInput,
 }: AttendanceSearchBarProps) {
   return (
-    <div className="flex w-full border-y-[1px] py-2 px-4 border-gray-300 items-center">
-      <MagnifyingGlassIcon className="w-6 h-6 mr-2 text-gray-500" />
+    <div className="flex w-full border-y-[1px] py-2 px-4 border-gray-300 items-center hover:text-black active:text-black">
+      <MagnifyingGlassIcon className="w-6 h-6 mr-2 text-gray-500 hover:text-black active:text-black" />
       <input
         disabled={disabled}
         value={searchInput ?? ""}
@@ -30,7 +30,11 @@ export default function AttendanceSearchBar({
         type="button"
         onClick={() => !disabled && setSearchInput("")}
       >
-        <XCircleIcon className={"w-7 h-7 text-gray-500 "} />
+        <XCircleIcon
+          className={
+            "w-7 h-7 text-gray-500 hover:text-black active:text-black "
+          }
+        />
       </button>
     </div>
   );

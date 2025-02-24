@@ -85,7 +85,7 @@ export default function Botbar({
             </div>
           )}
           <PlusCircleIcon
-            className="w-14 h-14 text-black cursor-pointer"
+            className="w-14 h-14 text-gray-500 cursor-pointer hover:text-black active:text-black"
             onClick={openModal}
           />
         </div>
