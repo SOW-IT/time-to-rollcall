@@ -83,7 +83,7 @@ export default function EventComponent({
               e.stopPropagation();
               openModal?.();
             }}
-            className={`rounded-3xl text-sm p-1 px-3 bg-white border-2 active:bg-gray-200 ${
+            className={`rounded-3xl text-sm p-1 px-3 bg-white border-2 hover:bg-gray-200 active:bg-gray-200 ${
               before
                 ? "border-gray-400 text-gray-400"
                 : "border-gray-600 text-gray-600"

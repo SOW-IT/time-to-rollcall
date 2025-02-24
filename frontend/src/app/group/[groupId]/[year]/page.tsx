@@ -237,7 +237,7 @@ export default function Group({
               <div key={i}>
                 <hr className="h-[1px] border-t-0 bg-neutral-300" />
                 <div
-                  className="cursor-pointer px-4 py-6 active:bg-gray-100"
+                  className="cursor-pointer px-4 py-6 hover:bg-gray-100 active:bg-gray-100"
                   onClick={() =>
                     router.push(
                       `${Path.Group}/${group.id}/${params.year}/event/${event.id}`
