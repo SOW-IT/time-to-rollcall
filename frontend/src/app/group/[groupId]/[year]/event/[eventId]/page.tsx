@@ -387,7 +387,7 @@ export default function Event({
           <div className="flex flex-col fixed z-40 bottom-0 w-full">
             <button
               type="button"
-              className="text-gray-700 text-sm py-4 px-1.5 w-full font-light text-center bg-green-200"
+              className="text-gray-700 text-sm py-4 px-1.5 w-full font-light text-center bg-green-200 hover:bg-green-300 active:bg-green-300"
               onClick={() => {
                 if (toggleEdit) {
                   setSelectedMemberInfo({
