@@ -44,7 +44,7 @@ function MemberCard({ member, action }: MemberCardProps) {
 
   return (
     <div
-      className="relative z-30 overflow-hidden cursor-pointer flex h-20 w-full px-4 bg-white items-center hover:bg-gray-100 active:bg-gray-100"
+      className="relative z-30 overflow-hidden cursor-pointer flex h-20 w-full px-4 bg-white items-center active:bg-gray-100"
       onClick={action}
     >
       <Image

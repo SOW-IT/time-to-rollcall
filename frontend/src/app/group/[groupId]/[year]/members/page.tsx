@@ -160,7 +160,7 @@ export default function GroupMember({
       {!disabled && (
         <button
           type="button"
-          className="fixed z-40 bottom-0 flex justify-center text-center text-gray-700 text-sm py-4 px-1.5 w-full rounded-lg bg-green-100 font-light hover:bg-green-300 active:bg-green-300"
+          className="fixed z-40 bottom-0 flex justify-center text-center text-gray-700 text-sm py-4 px-1.5 w-full rounded-lg bg-green-100 font-light active:bg-green-300"
           onClick={() => {
             setSelectedMember(
               InitMember(

@@ -212,7 +212,7 @@ export default function Group({
               <ListboxOptions
                 anchor="bottom"
                 transition
-                className="rounded-xl border border-white/5 bg-gray-100 p-1 focus:outline-none transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 data-[selected]:bg-gray-200 data-[focus]:bg-gray-200"
+                className="rounded-xl border border-white/5 bg-gray-100 p-1 focus:outline-none transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 data-[selected]:bg-gray-200"
               >
                 {years.map((year, j) => (
                   <ListboxOption

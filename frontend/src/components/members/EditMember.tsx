@@ -165,7 +165,7 @@ export default function EditMember({
                       <input
                         type="text"
                         autoFocus
-                        className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0 hover:bg-gray-200 active:bg-gray-200"
+                        className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0"
                         placeholder="Sijin Yang"
                         value={member.name}
                         onChange={(e) =>
@@ -184,7 +184,7 @@ export default function EditMember({
                             <input
                               type="text"
                               autoFocus
-                              className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0 hover:bg-gray-200 active:bg-gray-200"
+                              className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0"
                               placeholder={
                                 m.key === "zID" ? "z5312345" : "Placeholder"
                               }
@@ -226,7 +226,7 @@ export default function EditMember({
                                       />
                                     </ListboxButton>
                                   ) : (
-                                    <ListboxButton className="flex justify-between w-full appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-400 hover:bg-gray-200 active:bg-gray-200">
+                                    <ListboxButton className="flex justify-between w-full appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-400">
                                       <p>Unselected</p>
                                       <ChevronUpIcon
                                         className="pointer-events-none w-6 h-6 text-black"
