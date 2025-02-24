@@ -101,7 +101,7 @@ export default function DeleteConfirmation({
                   <>
                     <button
                       type="button"
-                      className="inline-flex w-full mt-4 justify-center rounded-3xl border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex w-full mt-4 justify-center rounded-3xl border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 active:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => {
                         setDeleteName("");
                         closeModal();
@@ -112,7 +112,7 @@ export default function DeleteConfirmation({
                     <button
                       type="button"
                       disabled={name ? deleteName !== name : false}
-                      className="inline-flex w-full mt-4 justify-center rounded-3xl border border-transparent bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex w-full mt-4 justify-center rounded-3xl border border-transparent bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 active:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={() => {
                         setDeleteName("");
                         confirm();
