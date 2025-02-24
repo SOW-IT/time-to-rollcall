@@ -100,7 +100,11 @@ export async function downloadEventsToExcel(
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    saveAs(blob, `Attendance_[${tags.map((t) => t.name).join(", ")}].xlsx`);
+    if (tags.length === 0) {
+      saveAs(blob, `Attendance_All.xlsx`);
+    } else {
+      saveAs(blob, `Attendance_[${tags.map((t) => t.name).join(", ")}].xlsx`);
+    }
   });
 }
 

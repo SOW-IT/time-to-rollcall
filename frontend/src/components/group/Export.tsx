@@ -212,11 +212,11 @@ export default function Export({
                   </div>
                 </div>
                 {updating ? (
-                  <div className="bottom-2 w-full fixed flex justify-center items-center">
+                  <div className="flex justify-center bottom-2 w-full absolute z-50">
                     <Loader show />
                   </div>
                 ) : (
-                  <div className="flex justify-center w-full bottom-2 fixed z-50 ">
+                  <div className="flex justify-center bottom-2 w-full absolute z-50">
                     <button
                       type="button"
                       className="mt-4 rounded-3xl border border-transparent bg-black px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
