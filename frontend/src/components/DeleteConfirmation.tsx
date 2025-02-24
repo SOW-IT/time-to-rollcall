@@ -66,7 +66,7 @@ export default function DeleteConfirmation({
                     closeModal();
                   }}
                 >
-                  <XMarkIcon className="w-6 h-6 text-black" />
+                  <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black active:text-black" />
                 </div>
                 <DialogTitle
                   as="h3"

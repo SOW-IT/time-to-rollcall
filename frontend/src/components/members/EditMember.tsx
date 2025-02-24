@@ -130,14 +130,14 @@ export default function EditMember({
                     className="absolute right-2 top-2 p-2 cursor-pointer"
                     onClick={closeModal}
                   >
-                    <XMarkIcon className="w-6 h-6 text-black" />
+                    <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black active:text-black" />
                   </div>
                   {!newMember && (
                     <div
                       className="absolute left-2 top-2 p-2 cursor-pointer"
                       onClick={openDeleteConfirmationModal}
                     >
-                      <TrashIcon className="w-6 h-6 text-red-600" />
+                      <TrashIcon className="w-6 h-6 text-red-600 hover:text-red-800 active:text-red-800" />
                     </div>
                   )}
                   <DialogTitle
@@ -165,7 +165,7 @@ export default function EditMember({
                       <input
                         type="text"
                         autoFocus
-                        className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0"
+                        className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0 hover:bg-gray-200 active:bg-gray-200"
                         placeholder="Sijin Yang"
                         value={member.name}
                         onChange={(e) =>
@@ -184,7 +184,7 @@ export default function EditMember({
                             <input
                               type="text"
                               autoFocus
-                              className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0"
+                              className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0 hover:bg-gray-200 active:bg-gray-200"
                               placeholder={
                                 m.key === "zID" ? "z5312345" : "Placeholder"
                               }
@@ -226,7 +226,7 @@ export default function EditMember({
                                       />
                                     </ListboxButton>
                                   ) : (
-                                    <ListboxButton className="flex justify-between w-full appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-400">
+                                    <ListboxButton className="flex justify-between w-full appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-400 hover:bg-gray-200 active:bg-gray-200">
                                       <p>Unselected</p>
                                       <ChevronUpIcon
                                         className="pointer-events-none w-6 h-6 text-black"
@@ -260,13 +260,13 @@ export default function EditMember({
                                               },
                                             })
                                           }
-                                          className="group flex justify-between cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[focus]:bg-white/10"
+                                          className="group flex justify-between cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[selected]:bg-gray-200 data-[focus]:bg-gray-200"
                                         >
                                           <div className="text-lg font-semibold">
                                             {vValue}
                                           </div>
                                           <CheckIcon
-                                            className="invisible size-4 fill-white group-data-[selected]:visible right-4 w-5 h-5 text-black"
+                                            className="invisible size-4 group-data-[selected]:visible right-4 w-5 h-5 text-black"
                                             aria-hidden="true"
                                           />
                                         </ListboxOption>
@@ -282,7 +282,7 @@ export default function EditMember({
                       <input
                         type="text"
                         autoFocus
-                        className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0"
+                        className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0 hover:bg-gray-200 active:bg-gray-200"
                         placeholder="example@email.com"
                         value={member.email ?? ""}
                         onChange={(e) =>

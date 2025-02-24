@@ -107,14 +107,14 @@ export default function EditEvent({
                     className="absolute right-2 top-2 p-2 cursor-pointer"
                     onClick={closeModal}
                   >
-                    <XMarkIcon className="w-6 h-6 text-black" />
+                    <XMarkIcon className="w-6 h-6 text-black hover:text-gray-600 active:text-gray-600" />
                   </div>
                   {!newEvent && (
                     <div
                       className="absolute left-2 top-2 p-2 cursor-pointer"
                       onClick={openDeleteConfirmationModal}
                     >
-                      <TrashIcon className="w-6 h-6 text-red-600" />
+                      <TrashIcon className="w-6 h-6 text-red-600 hover:text-red-800 active:text-red-800" />
                     </div>
                   )}
                   <TabGroup

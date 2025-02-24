@@ -72,7 +72,7 @@ export default function Export({
                   className="absolute right-2 top-2 p-2 cursor-pointer"
                   onClick={closeModal}
                 >
-                  <XMarkIcon className="w-6 h-6 text-black" />
+                  <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black active:text-black" />
                 </div>
                 <DialogTitle
                   as="h3"

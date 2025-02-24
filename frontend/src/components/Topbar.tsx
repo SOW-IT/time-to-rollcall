@@ -276,13 +276,16 @@ export default function Topbar({
         )}
         {year && disabled && (
           <button
-            className="rounded-lg bg-gray-200 p-1 px-2 font-bold"
+            className="rounded-lg bg-gray-200 p-1 px-2 font-bold hover:bg-gray-400 active:bg-gray-400"
             onClick={() =>
               router.push(`${Path.Group}/${group?.id}/${currentYearStr}`)
             }
           >
-            Previous Year: {year}
+            {year}
           </button>
+        )}
+        {!disabled && (
+          <p className="rounded-lg bg-gray-200 p-1 px-2 font-bold">{year}</p>
         )}
         {event ? (
           <div className="flex items-center gap-4 justify-end">

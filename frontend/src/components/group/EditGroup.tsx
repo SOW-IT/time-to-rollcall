@@ -95,7 +95,7 @@ export default function EditGroup({
                     className="absolute right-2 top-2 p-2 cursor-pointer"
                     onClick={closeModal}
                   >
-                    <XMarkIcon className="w-6 h-6 text-black" />
+                    <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black active:text-black" />
                   </div>
                   <DialogTitle
                     as="h3"
@@ -205,7 +205,7 @@ export default function EditGroup({
                                             ),
                                           ])
                                         }
-                                        className="group flex justify-between cursor-pointer items-center rounded-lg px-2 select-none data-[focus]:bg-white/10"
+                                        className="group flex justify-between cursor-pointer items-center rounded-lg px-2 select-none data-[focus]:bg-white/10 data-[selected]:bg-gray-200 data-[focus]:bg-gray-200"
                                       >
                                         <svg
                                           height="40"

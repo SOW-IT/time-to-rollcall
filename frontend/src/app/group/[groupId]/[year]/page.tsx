@@ -202,9 +202,7 @@ export default function Group({
                   disabled={years.length === 0}
                   className="flex justify-between items-center appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-600 hover:text-black active:text-black"
                 >
-                  {params.year === currentYearStr
-                    ? "Previous Years"
-                    : "View Years"}
+                  {params.year === currentYearStr ? "Past Years" : "View Years"}
                   <ChevronDownIcon
                     className="pointer-events-none w-6 h-6 text-gray-600"
                     aria-hidden="true"
@@ -214,7 +212,7 @@ export default function Group({
               <ListboxOptions
                 anchor="bottom"
                 transition
-                className="rounded-xl border border-white/5 bg-gray-100 p-1 focus:outline-none transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0"
+                className="rounded-xl border border-white/5 bg-gray-100 p-1 focus:outline-none transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 data-[selected]:bg-gray-200 data-[focus]:bg-gray-200"
               >
                 {years.map((year, j) => (
                   <ListboxOption
@@ -224,7 +222,7 @@ export default function Group({
                   >
                     <div className="text-lg font-semibold">{year}</div>
                     <CheckIcon
-                      className="invisible size-4 fill-white group-data-[selected]:visible right-4 w-5 h-5 text-black"
+                      className="invisible size-4 group-data-[selected]:visible right-4 w-5 h-5 text-black"
                       aria-hidden="true"
                     />
                   </ListboxOption>
