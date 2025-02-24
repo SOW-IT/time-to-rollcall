@@ -150,9 +150,12 @@ export default function EditMember({
                     <div className="my-4">
                       <p className="text-sm text-gray-900">
                         Name
-                        {newMember &&
+                        {!updating &&
+                          newMember &&
                           members?.some(
-                            (m) => m.name.trim() === member.name.trim()
+                            (m) =>
+                              m.name.toLowerCase().trim() ===
+                              member.name.toLowerCase().trim()
                           ) && (
                             <span className="ml-2 text-orange-400 text-xs">
                               Member with this name already exists!
@@ -301,7 +304,7 @@ export default function EditMember({
                     )}
                   </div>
                   {updating ? (
-                    <div className="bottom-2 absolute flex justify-center items-center">
+                    <div className="bottom-2 absolute w-full flex justify-center items-center">
                       <Loader show />
                     </div>
                   ) : (
@@ -313,7 +316,9 @@ export default function EditMember({
                         onClick={() =>
                           newMember &&
                           members?.some(
-                            (m) => m.name.trim() === member.name.trim()
+                            (m) =>
+                              m.name.toLowerCase().trim() ===
+                              member.name.toLowerCase().trim()
                           )
                             ? openConfirmationModal()
                             : submit()
