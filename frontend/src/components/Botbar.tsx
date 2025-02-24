@@ -34,9 +34,7 @@ export default function Botbar({
                 key={i}
                 className={
                   "inline-flex flex-col items-center justify-center px-3 py-3 my-1 h-8 rounded-full " +
-                  (filter.name === f.name
-                    ? "bg-white"
-                    : "hover:bg-white active:bg-white")
+                  (filter.name === f.name ? "bg-white" : "active:bg-white")
                 }
                 onClick={() =>
                   filterEvents(filter.name === f.name ? newestFilter : f)
@@ -50,7 +48,7 @@ export default function Botbar({
                 "inline-flex flex-col items-center justify-center px-3 py-3 my-1 h-8 rounded-full " +
                 (tagsOpen || filteredTags.length > 0
                   ? "bg-white"
-                  : "hover:bg-white active:bg-white")
+                  : "active:bg-white")
               }
               onClick={() => {
                 setTagsOpen(!tagsOpen);
