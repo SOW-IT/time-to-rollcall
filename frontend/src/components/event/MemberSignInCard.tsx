@@ -14,7 +14,12 @@ import { FC, memo, useContext, useEffect, useRef } from "react";
 import WOMAN_FACE_SVG from "../../../public/face-woman-profile.svg";
 import MAN_SVG from "../../../public/man-profile.svg";
 import GroupBadge from "./GroupBadge";
-import { EventContext, EventsContext, MetadataContext } from "@/lib/context";
+import {
+  EventContext,
+  EventsContext,
+  GroupContext,
+  MetadataContext,
+} from "@/lib/context";
 import { MetadataSelectModel } from "@/models/Metadata";
 import useMediaQuery from "@/helper/useMediaQuery";
 import { MemberInformation } from "@/models/Event";
@@ -60,6 +65,7 @@ function MemberSignInCard({
   refreshDependency,
   triggerAddAnimation,
 }: MemberSignInCardProps) {
+  const group = useContext(GroupContext);
   const event = useContext(EventContext);
   const events = useContext(EventsContext);
   const metadata = useContext(MetadataContext);
@@ -275,7 +281,12 @@ function MemberSignInCard({
             }}
           >
             <div className="relative flex justify-between items-center">
-              {role &&
+              {campus &&
+              (!memberInfo.member.metadata?.[campus.id] ||
+                (memberInfo.member.metadata?.[campus.id] &&
+                  campus.values[memberInfo.member.metadata?.[campus.id]] ===
+                    group?.name)) &&
+              role &&
               (!memberInfo.member.metadata?.[role.id] ||
                 (memberInfo.member.metadata?.[role.id] &&
                   role.values[memberInfo.member.metadata?.[role.id]] ===
