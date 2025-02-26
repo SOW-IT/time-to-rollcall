@@ -295,7 +295,7 @@ function MemberSignInCard({
               pastEvents?.filter((e) =>
                 e.members?.some((m) => m.member.id === memberInfo.member.id)
               ).length < 3 ? (
-                <div className="absolute -top-4 -left-4 z-50">NEW</div>
+                <div className="absolute -top-4 -left-4 z-30">NEW</div>
               ) : (
                 <></>
               )}
