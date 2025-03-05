@@ -4,6 +4,7 @@ export enum University {
   UTS = "University of Technology, Sydney",
   MACQ = "Macquarie University",
   ACU = "Australian Catholic University",
+  WSU = "Western Sydney University",
 }
 
 export const universityColours: Record<string, string> = {
@@ -12,6 +13,7 @@ export const universityColours: Record<string, string> = {
   [University.UTS]: "#3B5499",
   [University.MACQ]: "#F2C259",
   [University.ACU]: "#57427A",
+  [University.WSU]: "#990033",
 };
 
 export function getUniversityKey(value?: string): string | undefined {
