@@ -225,15 +225,18 @@ function MemberSignInCard({
 
     return (
       <div className="flex p-2">
-        {pastEvents?.slice(-5).map((e, i) => (
-          <div key={i} className="flex-row-reverse align-middle gap-1 m-1">
-            {e.members?.find((m) => m.member.id === memberInfo.member.id) ? (
-              <div className="bg-green-400 p-2" />
-            ) : (
-              <div className="bg-gray-100 p-2" />
-            )}
-          </div>
-        ))}
+        {pastEvents
+          ?.slice(-5)
+          .reverse()
+          .map((e, i) => (
+            <div key={i} className="flex align-middle gap-1 m-1">
+              {e.members?.find((m) => m.member.id === memberInfo.member.id) ? (
+                <div className="bg-green-400 p-2" />
+              ) : (
+                <div className="bg-gray-100 p-2" />
+              )}
+            </div>
+          ))}
       </div>
     );
   }
