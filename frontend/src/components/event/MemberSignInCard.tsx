@@ -285,10 +285,9 @@ function MemberSignInCard({
           >
             <div className="relative flex justify-between items-center">
               {campus &&
-              (!memberInfo.member.metadata?.[campus.id] ||
-                (memberInfo.member.metadata?.[campus.id] &&
-                  campus.values[memberInfo.member.metadata?.[campus.id]] ===
-                    group?.name)) &&
+              memberInfo.member.metadata?.[campus.id] &&
+              campus.values[memberInfo.member.metadata?.[campus.id]] ===
+                group?.name &&
               role &&
               (!memberInfo.member.metadata?.[role.id] ||
                 (memberInfo.member.metadata?.[role.id] &&
