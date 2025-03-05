@@ -204,15 +204,19 @@ export default function EditMember({
                             <div className="mx-auto w-full">
                               <Listbox
                                 value={member.metadata?.[m.id] ?? ""}
-                                onChange={(value) =>
+                                onChange={(value) => {
+                                  const newValue =
+                                    value === member.metadata?.[m.id]
+                                      ? ""
+                                      : value;
                                   setMember({
                                     ...member,
                                     metadata: {
                                       ...member.metadata,
-                                      [m.id]: value,
+                                      [m.id]: newValue,
                                     },
-                                  })
-                                }
+                                  });
+                                }}
                               >
                                 <div className="flex justify-between items-center">
                                   {member.metadata?.[m.id] ? (
