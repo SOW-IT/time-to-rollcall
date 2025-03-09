@@ -165,12 +165,12 @@ export default function GroupMember({
             setSelectedMember(
               InitMember(
                 searchInput,
-                metadata?.find((m) => m.key === "campus" && m.type === "select")
+                metadata?.find((m) => m.key === "Campus" && m.type === "select")
                   ?.id,
                 Object.entries(
                   (
                     metadata?.find(
-                      (m) => m.key === "campus" && m.type === "select"
+                      (m) => m.key === "Campus" && m.type === "select"
                     ) as MetadataSelectModel | undefined
                   )?.values ?? {}
                 ).find(([_, v]) => v === group?.name)?.[0]
