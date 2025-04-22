@@ -28,6 +28,7 @@ export const universityIds: Record<string, string> = {
   [University.MACQ]: "CZHRnKJ8SDnfMIw64WJu",
   [University.USYD]: "MUSmSaufEfgdJUX4Kx4G",
   [University.UTS]: "wrsDV3XfwQB4RD7BxKD2",
+  [University.SOW]: "T4qzZ5X3pGqJgJ8CMOtk",
 };
 
 export const universityNames: Record<string, University> = {
