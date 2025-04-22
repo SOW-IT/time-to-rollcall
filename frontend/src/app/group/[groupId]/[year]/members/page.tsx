@@ -51,8 +51,10 @@ export default function GroupMember({
       if (searchInput.length > 0) {
         const { suggested } = searchForMemberByName(members ?? [], searchInput);
         setMembersShown(suggested);
+        setCampusFilter("Unselected");
       } else if (prevSearchActive && searchInput.length === 0) {
         setMembersShown(members ?? []);
+        setCampusFilter("Unselected");
       }
     }, 500);
     return () => clearTimeout(delayDebounceFn);

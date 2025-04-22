@@ -3,6 +3,7 @@ import Topbar from "@/components/Topbar";
 import { Path } from "@/helper/Path";
 import { UserContext } from "@/lib/context";
 import { firestore } from "@/lib/firebase";
+import { useMembersListener } from "@/lib/hooks";
 import { convertMemberIdToReference } from "@/lib/members";
 import {
   collection,
@@ -23,6 +24,7 @@ import { useContext, useEffect } from "react";
 export default function GroupAdmin() {
   const user = useContext(UserContext);
   const router = useRouter();
+  const members = useMembersListener(user, "2025", "ccSgQTXvLRnin0OjwvRM");
 
   useEffect(() => {
     if (user) {
@@ -48,6 +50,25 @@ export default function GroupAdmin() {
     return members?.map((m) =>
       m.member.id === from.id ? { member: to, signInTime: m.signInTime } : m
     );
+  };
+
+  const removeDuplicateMembers = (
+    members?: { member: DocumentReference; signInTime: Timestamp }[]
+  ) => {
+    if (!members || members.length === 0) return [];
+
+    const seen = new Map<
+      string,
+      { member: DocumentReference; signInTime: Timestamp }
+    >();
+    for (const entry of members) {
+      const path = entry.member.path;
+      if (!seen.has(path)) {
+        seen.set(path, entry);
+      }
+    }
+
+    return Array.from(seen.values());
   };
 
   const move = async (groupId: string, otherUnisList: string[]) => {
@@ -184,6 +205,25 @@ export default function GroupAdmin() {
     console.log("end");
   };
 
+  const removeDuplicates = async () => {
+    for (const groupId of [
+      "ccSgQTXvLRnin0OjwvRM",
+      "CZHRnKJ8SDnfMIw64WJu",
+      "MUSmSaufEfgdJUX4Kx4G",
+      "wrsDV3XfwQB4RD7BxKD2",
+    ]) {
+      const events = await getDocs(
+        collection(firestore, "groups", groupId, "events")
+      );
+      for (const e of events.docs) {
+        console.log("Updating Event Doc: ", e.data().name);
+        await updateDoc(doc(firestore, "groups", groupId, "events", e.id), {
+          members: removeDuplicateMembers(e.data().members),
+        });
+      }
+    }
+  };
+
   return (
     user && (
       <>
@@ -224,6 +264,13 @@ export default function GroupAdmin() {
             onClick={() => move("T4qzZ5X3pGqJgJ8CMOtk", ["1", "2", "3", "4"])}
           >
             Move SOW
+          </button>
+          <button
+            type="button"
+            className="p-2 bg-slate-200"
+            onClick={() => removeDuplicates()}
+          >
+            Remove Duplicates
           </button>
         </div>
       </>
