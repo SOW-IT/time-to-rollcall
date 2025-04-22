@@ -351,7 +351,7 @@ export default function Event({
             searchInput={searchInput}
             setSearchInput={setSearchInput}
           />
-          <div className="md:grid md:grid-cols-2 md:grid-flow-row z-30">
+          <div className="md:grid md:grid-cols-2 md:grid-flow-row z-30 mb-12">
             <div className="w-full">
               <AttendanceSuggested
                 disabled={!toggleEdit}
