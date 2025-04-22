@@ -71,6 +71,66 @@ export default function GroupAdmin() {
     return Array.from(seen.values());
   };
 
+  const combineSameName = async () => {
+    if (members) {
+      for (const member of members) {
+        const sameNames = members.filter((m) => m.name === member.name);
+        if (sameNames.length > 1) {
+          console.log("Duplicate member:", member.name);
+          const chosenPerson = sameNames.reduce((max, current) =>
+            (current.metadata?.length ?? 0) > (max.metadata?.length ?? 0)
+              ? current
+              : max
+          );
+          const others = sameNames.filter((m) => m.id !== chosenPerson.id);
+
+          console.log(
+            "Others:",
+            sameNames.map((sn) => sn.id)
+          );
+          console.log("Chosen:", chosenPerson.id);
+
+          for (const other of others) {
+            for (const groupId of [
+              "ccSgQTXvLRnin0OjwvRM",
+              "CZHRnKJ8SDnfMIw64WJu",
+              "MUSmSaufEfgdJUX4Kx4G",
+              "wrsDV3XfwQB4RD7BxKD2",
+            ]) {
+              const events = await getDocs(
+                collection(firestore, "groups", groupId, "events")
+              );
+              for (const e of events.docs) {
+                console.log(
+                  "Updating Event Doc for member: ",
+                  chosenPerson.name,
+                  e.data().name
+                );
+                await updateDoc(
+                  doc(firestore, "groups", groupId, "events", e.id),
+                  {
+                    members: replaceMember(
+                      other.docRef ??
+                        convertMemberIdToReference(groupId, other.id),
+                      chosenPerson.docRef ??
+                        convertMemberIdToReference(groupId, chosenPerson.id),
+                      e.data().members
+                    ),
+                  }
+                );
+              }
+            }
+            await deleteDoc(
+              other.docRef ??
+                convertMemberIdToReference("ccSgQTXvLRnin0OjwvRM", other.id)
+            );
+          }
+        }
+      }
+    }
+    console.log("done");
+  };
+
   const move = async (groupId: string, otherUnisList: string[]) => {
     console.log("start", groupId);
     const otherCampuses = await getDocs(
@@ -264,6 +324,13 @@ export default function GroupAdmin() {
             onClick={() => move("T4qzZ5X3pGqJgJ8CMOtk", ["1", "2", "3", "4"])}
           >
             Move SOW
+          </button>
+          <button
+            type="button"
+            className="p-2 bg-slate-200"
+            onClick={() => combineSameName()}
+          >
+            Combine Same Name
           </button>
           <button
             type="button"

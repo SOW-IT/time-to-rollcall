@@ -6,7 +6,7 @@ import AttendanceSignedIn from "@/components/event/AttendanceSignedIn";
 import AttendanceSuggested from "@/components/event/AttendanceSuggested";
 import LiveBadge from "@/components/event/LiveBadge";
 import EditMember from "@/components/members/EditMember";
-import { inBetween } from "@/helper/Time";
+import { currentYearStr, inBetween } from "@/helper/Time";
 import { promiseToast } from "@/helper/Toast";
 import {
   EventContext,
@@ -19,6 +19,7 @@ import {
   removeMemberFromEvent,
   updateEventMembers,
 } from "@/lib/events";
+import { firestore } from "@/lib/firebase";
 import { createMember, deleteMember, updateMember } from "@/lib/members";
 import { EventId, MemberInformation } from "@/models/Event";
 import { GroupId } from "@/models/Group";
@@ -26,6 +27,7 @@ import { InitMember, MemberModel } from "@/models/Member";
 import { MetadataSelectModel } from "@/models/Metadata";
 import { universityIds } from "@/models/University";
 import { useGSAP } from "@gsap/react";
+import { doc } from "firebase/firestore";
 import gsap from "gsap";
 import Draggable from "gsap/dist/Draggable";
 import { useContext, useEffect, useState } from "react";
@@ -121,11 +123,16 @@ export default function Event({
     } else {
       await promiseToast<void>(
         updateMember(
-          campus && selectedMemberInfo.member.metadata
-            ? universityIds[
-                campus.values[selectedMemberInfo.member.metadata[campus.id]]
-              ] ?? params.groupId
-            : params.groupId,
+          selectedMemberInfo.member.docRef ??
+            doc(
+              firestore,
+              "groups",
+              params.groupId,
+              "members",
+              currentYearStr,
+              "members",
+              selectedMemberInfo.member.id
+            ),
           selectedMemberInfo.member
         ),
         "Updating Member...",

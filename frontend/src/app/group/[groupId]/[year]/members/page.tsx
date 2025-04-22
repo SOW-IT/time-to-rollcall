@@ -7,6 +7,7 @@ import Members from "@/components/members/Members";
 import { currentYearStr } from "@/helper/Time";
 import { promiseToast } from "@/helper/Toast";
 import { GroupContext, MembersContext, MetadataContext } from "@/lib/context";
+import { firestore } from "@/lib/firebase";
 import { createMember, deleteMember, updateMember } from "@/lib/members";
 import { GroupId } from "@/models/Group";
 import { InitMember, MemberModel } from "@/models/Member";
@@ -18,6 +19,7 @@ import {
   ListboxOption,
   ListboxOptions,
 } from "@headlessui/react";
+import { doc } from "firebase/firestore";
 import { useContext, useEffect, useState } from "react";
 import { searchForMemberByName } from "services/attendanceService";
 
@@ -113,11 +115,16 @@ export default function GroupMember({
       } else {
         await promiseToast<void>(
           updateMember(
-            campus && selectedMember.metadata
-              ? universityIds[
-                  campus.values[selectedMember.metadata[campus.id]]
-                ] ?? params.groupId
-              : params.groupId,
+            selectedMember.docRef ??
+              doc(
+                firestore,
+                "groups",
+                params.groupId,
+                "members",
+                currentYearStr,
+                "members",
+                selectedMember.id
+              ),
             selectedMember
           ),
           "Updating Member...",
