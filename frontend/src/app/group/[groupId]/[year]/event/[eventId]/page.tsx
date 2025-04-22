@@ -109,12 +109,19 @@ export default function Event({
         addMemberToEvent(
           groupId,
           eventId,
-          campus && selectedMemberInfo.member.metadata
-            ? universityIds[
-                campus.values[selectedMemberInfo.member.metadata[campus.id]]
-              ] ?? params.groupId
-            : params.groupId,
-          newMember.id
+          doc(
+            firestore,
+            "groups",
+            campus && selectedMemberInfo.member.metadata
+              ? universityIds[
+                  campus.values[selectedMemberInfo.member.metadata[campus.id]]
+                ] ?? params.groupId
+              : params.groupId,
+            "members",
+            currentYearStr,
+            "members",
+            newMember.id
+          )
         ),
         "Creating and Adding Member...",
         "Member Created and Added!",
@@ -254,11 +261,6 @@ export default function Event({
           removeMemberFromEvent(
             groupId,
             eventId,
-            campus && selectedMemberInfo.member.metadata
-              ? universityIds[
-                  campus.values[selectedMemberInfo.member.metadata[campus.id]]
-                ] ?? params.groupId
-              : params.groupId,
             event.members?.find(
               (m) => m.member.id === selectedMemberInfo.member.id
             )
@@ -390,12 +392,22 @@ export default function Event({
                     addMemberToEvent(
                       groupId,
                       eventId,
-                      campus && member.metadata
-                        ? universityIds[
-                            campus.values[member.metadata[campus.id]]
-                          ] ?? params.groupId
-                        : params.groupId,
-                      member.id
+                      member.docRef ??
+                        doc(
+                          firestore,
+                          "groups",
+                          campus && selectedMemberInfo.member.metadata
+                            ? universityIds[
+                                campus.values[
+                                  selectedMemberInfo.member.metadata[campus.id]
+                                ]
+                              ] ?? params.groupId
+                            : params.groupId,
+                          "members",
+                          currentYearStr,
+                          "members",
+                          member.id
+                        )
                     ),
                     `Adding ${member.name}...`,
                     `${member.name} Added!`,
@@ -427,11 +439,6 @@ export default function Event({
                     removeMemberFromEvent(
                       groupId,
                       eventId,
-                      campus && member.metadata
-                        ? universityIds[
-                            campus.values[member.metadata[campus.id]]
-                          ] ?? params.groupId
-                        : params.groupId,
                       event.members?.find((m) => m.member.id === member.id)
                     ),
                     `Removing ${member.name}...`,
