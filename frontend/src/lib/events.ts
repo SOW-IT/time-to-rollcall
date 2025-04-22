@@ -114,13 +114,14 @@ function convertEventToDocument(groupId: GroupId, event: EventModel) {
 export async function updateEventMembers(
   groupId: GroupId,
   eventId: EventId,
+  memberGroupId: GroupId,
   members: MemberInformation[]
 ) {
   await updateDoc(doc(firestore, "groups", groupId, "events", eventId), {
     members:
       members?.map((m) => ({
         ...m,
-        member: convertMemberIdToReference(groupId, m.member.id),
+        member: convertMemberIdToReference(memberGroupId, m.member.id),
       })) ?? [],
   });
 }
@@ -128,6 +129,7 @@ export async function updateEventMembers(
 export async function addMemberToEvent(
   groupId: GroupId,
   eventId: EventId,
+  memberGroupId: GroupId,
   memberId: MemberId
 ) {
   await updateDoc(doc(firestore, "groups", groupId, "events", eventId), {
@@ -135,7 +137,7 @@ export async function addMemberToEvent(
       member: doc(
         firestore,
         "groups",
-        groupId,
+        memberGroupId,
         "members",
         currentYearStr,
         "members",
@@ -149,6 +151,7 @@ export async function addMemberToEvent(
 export async function removeMemberFromEvent(
   groupId: GroupId,
   eventId: EventId,
+  memberGroupId: GroupId,
   memberInfo?: MemberInformation
 ) {
   memberInfo &&

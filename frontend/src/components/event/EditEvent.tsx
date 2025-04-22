@@ -20,6 +20,8 @@ import { EventModel } from "@/models/Event";
 import Loader from "../Loader";
 import DeleteConfirmation from "../DeleteConfirmation";
 import { TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { universityIds } from "@/models/University";
+import GroupBadge from "./GroupBadge";
 
 export default function EditEvent({
   groupId,
@@ -60,6 +62,7 @@ export default function EditEvent({
   function incrementStep() {
     setSelectedIndex((prevIndex) => prevIndex + 1);
   }
+  const isCampus = Object.values(universityIds).includes(groupId);
   return (
     <>
       {deleteConfirmationIsOpen !== undefined &&
@@ -137,6 +140,16 @@ export default function EditEvent({
                         }
                         disabled={!submitEventForm.name}
                       />
+                      {isCampus && (
+                        <Tab
+                          className={({ selected }) =>
+                            selected
+                              ? "h-1 w-12 rounded-xl bg-blue-500"
+                              : "h-1 w-12 rounded-xl bg-blue-100"
+                          }
+                          disabled={!submitEventForm.name}
+                        />
+                      )}
                       <Tab
                         className={({ selected }) =>
                           selected
@@ -277,6 +290,57 @@ export default function EditEvent({
                           </div>
                         </ul>
                       </TabPanel>
+                      {isCampus && (
+                        <TabPanel>
+                          <ul>
+                            <DialogTitle
+                              as="h3"
+                              className="text-xl font-medium leading-6 text-gray-900"
+                            >
+                              Collaborate with other campuses?
+                            </DialogTitle>
+                            <p className="my-2 text-xs font-light text-gray-400">
+                              Select other Campuses to collaborate with
+                            </p>
+                            {Object.entries(universityIds).map(
+                              ([campus, id], index) => (
+                                <div
+                                  key={index}
+                                  className="flex justify-center gap-2 my-2"
+                                >
+                                  <GroupBadge
+                                    disabled={id === groupId}
+                                    campus={campus}
+                                    selected={
+                                      submitEventForm.collaboration?.includes(
+                                        id
+                                      ) ?? false
+                                    }
+                                    className="px-4 text-base"
+                                    onClick={() =>
+                                      setSubmitEventForm({
+                                        ...submitEventForm,
+                                        collaboration:
+                                          submitEventForm.collaboration
+                                            ? submitEventForm.collaboration?.includes(
+                                                id
+                                              )
+                                              ? submitEventForm.collaboration?.filter(
+                                                  (c) => c !== id
+                                                )
+                                              : submitEventForm.collaboration?.concat(
+                                                  id
+                                                )
+                                            : [id],
+                                      })
+                                    }
+                                  />
+                                </div>
+                              )
+                            )}
+                          </ul>
+                        </TabPanel>
+                      )}
                       <TabPanel>
                         <ul>
                           <DialogTitle
@@ -345,7 +409,9 @@ export default function EditEvent({
                             ? !submitEventForm.name
                             : selectedIndex === 1
                             ? false
-                            : selectedIndex === 2
+                            : selectedIndex === (isCampus ? 2 : 1)
+                            ? false
+                            : selectedIndex === (isCampus ? 3 : 2)
                             ? !submitEventForm.dateStart ||
                               !submitEventForm.dateEnd ||
                               submitEventForm.dateEnd <
@@ -356,13 +422,13 @@ export default function EditEvent({
                         onClick={
                           !newEvent
                             ? submitEvent
-                            : selectedIndex === 2
+                            : selectedIndex === (isCampus ? 3 : 2)
                             ? submitEvent
                             : incrementStep
                         }
                       >
                         {newEvent
-                          ? selectedIndex === 2
+                          ? selectedIndex === (isCampus ? 3 : 2)
                             ? "Create event"
                             : "Next"
                           : "Save"}

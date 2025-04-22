@@ -2,6 +2,21 @@
 import Topbar from "@/components/Topbar";
 import { Path } from "@/helper/Path";
 import { UserContext } from "@/lib/context";
+import { firestore } from "@/lib/firebase";
+import { convertMemberIdToReference } from "@/lib/members";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  DocumentReference,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  Timestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect } from "react";
 
@@ -18,34 +33,154 @@ export default function GroupAdmin() {
     // eslint-disable-next-line
   }, [user]);
 
-  // const changeMembersForGroup = async (groupId: string) => {
-  //   const events = await getDocs(
-  //     collection(firestore, "groups", groupId, "events")
-  //   );
-  //   for (const event of events.docs) {
-  //     const data = event.data();
-  //     if (data.members) {
-  //       await updateDoc(doc(firestore, "groups", groupId, "events", event.id), {
-  //         members: data.members.map((m: DocumentReference) => ({
-  //           member: m,
-  //           signInTime: data.dateStart,
-  //         })),
-  //       });
-  //     }
-  //   }
-  // };
+  const universityIds = {
+    1: "ccSgQTXvLRnin0OjwvRM",
+    2: "CZHRnKJ8SDnfMIw64WJu",
+    3: "MUSmSaufEfgdJUX4Kx4G",
+    4: "wrsDV3XfwQB4RD7BxKD2",
+  };
 
-  const addOrderToMetadata = async () => {
-    console.log("start");
-    // await changeMembersForGroup("ccSgQTXvLRnin0OjwvRM");
-    // for (const group of groups ?? []) {
-    //   const mds = await getMetadatas(group.id);
-    //   let index = 1;
-    //   for (const md of mds) {
-    //     await updateMetadata(group.id, { ...md, order: index });
-    //     ++index;
-    //   }
-    // }
+  const replaceMember = (
+    from: DocumentReference,
+    to: DocumentReference,
+    members?: { member: DocumentReference; signInTime: Timestamp }[]
+  ) => {
+    return members?.map((m) =>
+      m.member.id === from.id ? { member: to, signInTime: m.signInTime } : m
+    );
+  };
+
+  const move = async (groupId: string, otherUnisList: string[]) => {
+    console.log("start", groupId);
+    const otherCampuses = await getDocs(
+      query(
+        collection(firestore, "groups", groupId, "members", "2025", "members"),
+        where("metadata.wOoTm2Vtr1geLVZMh0Kl", "in", otherUnisList)
+      )
+    );
+    console.log(otherCampuses.docs);
+    for (const d of otherCampuses.docs) {
+      console.log("Searching original uni for: ", d.data().name);
+      const originalUniId =
+        universityIds[
+          (d.data().metadata?.["wOoTm2Vtr1geLVZMh0Kl"] ??
+            "5") as keyof typeof universityIds
+        ];
+      if (originalUniId) {
+        console.log("Original Uni Exists: ", d.data().name);
+        const originalMember = await getDoc(
+          doc(
+            firestore,
+            "groups",
+            originalUniId,
+            "members",
+            "2025",
+            "members",
+            d.id
+          )
+        );
+        if (originalMember.exists()) {
+          console.log("Original Member Exists: ", d.data().name);
+          const events = await getDocs(
+            collection(firestore, "groups", groupId, "events")
+          );
+          for (const e of events.docs) {
+            console.log(
+              "Updating Event Doc for member: ",
+              d.data().name,
+              e.data().name
+            );
+            await updateDoc(doc(firestore, "groups", groupId, "events", e.id), {
+              members: replaceMember(
+                convertMemberIdToReference(groupId, d.id),
+                convertMemberIdToReference(originalUniId, originalMember.id),
+                e.data().members
+              ),
+            });
+          }
+        } else {
+          const originalMembers = await getDocs(
+            query(
+              collection(
+                firestore,
+                "groups",
+                originalUniId,
+                "members",
+                "2025",
+                "members"
+              ),
+              where("name", "==", d.data().name)
+            )
+          );
+          if (originalMembers.size == 1) {
+            console.log("Original Member Exists by Name: ", d.data().name);
+            for (const omd of originalMembers.docs) {
+              const events = await getDocs(
+                collection(firestore, "groups", groupId, "events")
+              );
+              for (const e of events.docs) {
+                console.log(
+                  "Updating Event Doc for member: ",
+                  d.data().name,
+                  e.data().name
+                );
+                await updateDoc(
+                  doc(firestore, "groups", groupId, "events", e.id),
+                  {
+                    members: replaceMember(
+                      convertMemberIdToReference(groupId, d.id),
+                      convertMemberIdToReference(originalUniId, omd.id),
+                      e.data().members
+                    ),
+                  }
+                );
+              }
+            }
+          } else {
+            console.log(
+              "Original Member Doesn't Exist, adding to Uni: ",
+              d.data().name
+            );
+            await setDoc(
+              doc(
+                firestore,
+                "groups",
+                originalUniId,
+                "members",
+                "2025",
+                "members",
+                d.id
+              ),
+              d.data()
+            );
+            const events = await getDocs(
+              collection(firestore, "groups", groupId, "events")
+            );
+            for (const e of events.docs) {
+              console.log(
+                "Updating Event Doc for member: ",
+                d.data().name,
+                e.data().name
+              );
+              await updateDoc(
+                doc(firestore, "groups", groupId, "events", e.id),
+                {
+                  members: replaceMember(
+                    convertMemberIdToReference(groupId, d.id),
+                    convertMemberIdToReference(originalUniId, d.id),
+                    e.data().members
+                  ),
+                }
+              );
+            }
+          }
+        }
+      }
+      console.log("Deleting member from current campus: ", d.data().name);
+      await deleteDoc(
+        doc(firestore, "groups", groupId, "members", "2025", "members", d.id)
+      );
+    }
     console.log("end");
   };
 
@@ -58,9 +193,37 @@ export default function GroupAdmin() {
           <button
             type="button"
             className="p-2 bg-slate-200"
-            onClick={() => addOrderToMetadata()}
+            onClick={() => move("ccSgQTXvLRnin0OjwvRM", ["2", "3", "4"])}
           >
-            Change Members
+            Move UNSW
+          </button>
+          <button
+            type="button"
+            className="p-2 bg-slate-200"
+            onClick={() => move("CZHRnKJ8SDnfMIw64WJu", ["1", "3", "4"])}
+          >
+            Move MACQ
+          </button>
+          <button
+            type="button"
+            className="p-2 bg-slate-200"
+            onClick={() => move("MUSmSaufEfgdJUX4Kx4G", ["1", "2", "4"])}
+          >
+            Move USYD
+          </button>
+          <button
+            type="button"
+            className="p-2 bg-slate-200"
+            onClick={() => move("wrsDV3XfwQB4RD7BxKD2", ["1", "2", "3"])}
+          >
+            Move UTS
+          </button>
+          <button
+            type="button"
+            className="p-2 bg-slate-200"
+            onClick={() => move("T4qzZ5X3pGqJgJ8CMOtk", ["1", "2", "3", "4"])}
+          >
+            Move SOW
           </button>
         </div>
       </>

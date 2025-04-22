@@ -27,6 +27,7 @@ import {
   where,
 } from "firebase/firestore";
 import { MetadataModel } from "@/models/Metadata";
+import { University, universityIds } from "@/models/University";
 
 export function useUserListener() {
   const [userAuth, loadingAuth] = useAuthState(auth);
@@ -99,7 +100,55 @@ export function useMembersListener(
     user !== null && groupId && user?.groups?.includes(groupId) ? true : false,
     orderBy("name", "asc")
   );
-  return members;
+  const { data: members1 } = useFirestoreCol<MemberModel>(
+    firestore,
+    `groups/${universityIds[University.USYD]}/members/${year}/members`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.USYD] &&
+      universityIds[University.USYD]
+      ? true
+      : false,
+    orderBy("name", "asc")
+  );
+  const { data: members2 } = useFirestoreCol<MemberModel>(
+    firestore,
+    `groups/${universityIds[University.UTS]}/members/${year}/members`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.UTS] &&
+      universityIds[University.UTS]
+      ? true
+      : false,
+    orderBy("name", "asc")
+  );
+  const { data: members3 } = useFirestoreCol<MemberModel>(
+    firestore,
+    `groups/${universityIds[University.UNSW]}/members/${year}/members`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.UNSW] &&
+      universityIds[University.UNSW]
+      ? true
+      : false,
+    orderBy("name", "asc")
+  );
+  const { data: members4 } = useFirestoreCol<MemberModel>(
+    firestore,
+    `groups/${universityIds[University.MACQ]}/members/${year}/members`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.MACQ] &&
+      universityIds[University.MACQ]
+      ? true
+      : false,
+    orderBy("name", "asc")
+  );
+  return members
+    ?.concat(members1 ?? [])
+    .concat(members2 ?? [])
+    .concat(members3 ?? [])
+    .concat(members4 ?? []);
 }
 
 export function useMetadataListener(
@@ -143,7 +192,97 @@ export function useEventsListener(
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`))
   );
-  return events;
+  const { data: events1 } = useFirestoreCol<EventModel>(
+    firestore,
+    `groups/${universityIds[University.USYD]}/events`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.USYD] &&
+      universityIds[University.USYD]
+      ? true
+      : false,
+    orderBy("dateEnd", "desc"),
+    undefined,
+    undefined,
+    "members",
+    where("dateStart", ">=", new Date(`${year}-01-01`)),
+    where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
+    where("collaboration", "array-contains", groupId)
+  );
+  const { data: events2 } = useFirestoreCol<EventModel>(
+    firestore,
+    `groups/${universityIds[University.UNSW]}/events`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.UNSW] &&
+      universityIds[University.UNSW]
+      ? true
+      : false,
+    orderBy("dateEnd", "desc"),
+    undefined,
+    undefined,
+    "members",
+    where("dateStart", ">=", new Date(`${year}-01-01`)),
+    where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
+    where("collaboration", "array-contains", groupId)
+  );
+  const { data: events3, error } = useFirestoreCol<EventModel>(
+    firestore,
+    `groups/${universityIds[University.UTS]}/events`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.UTS] &&
+      universityIds[University.UTS]
+      ? true
+      : false,
+    orderBy("dateEnd", "desc"),
+    undefined,
+    undefined,
+    "members",
+    where("dateStart", ">=", new Date(`${year}-01-01`)),
+    where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
+    where("collaboration", "array-contains", groupId)
+  );
+  const { data: events4 } = useFirestoreCol<EventModel>(
+    firestore,
+    `groups/${universityIds[University.MACQ]}/events`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.MACQ] &&
+      universityIds[University.MACQ]
+      ? true
+      : false,
+    orderBy("dateEnd", "desc"),
+    undefined,
+    undefined,
+    "members",
+    where("dateStart", ">=", new Date(`${year}-01-01`)),
+    where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
+    where("collaboration", "array-contains", groupId)
+  );
+  return events
+    ?.concat(
+      events1?.map((e) => ({
+        ...e,
+        groupId: universityIds[University.USYD],
+      })) ?? []
+    )
+    .concat(
+      events2?.map((e) => ({
+        ...e,
+        groupId: universityIds[University.UNSW],
+      })) ?? []
+    )
+    .concat(
+      events3?.map((e) => ({ ...e, groupId: universityIds[University.UTS] })) ??
+        []
+    )
+    .concat(
+      events4?.map((e) => ({
+        ...e,
+        groupId: universityIds[University.MACQ],
+      })) ?? []
+    );
 }
 
 export function useEventListener(

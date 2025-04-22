@@ -3,14 +3,18 @@ import { hoursAndMinutes, inBetween, sameDay, toddMMYYYY } from "@/helper/Time";
 import LiveBadge from "./LiveBadge";
 import Tag from "./Tag";
 import { useState, useEffect } from "react";
+import { University } from "@/models/University";
+import GroupBadge from "./GroupBadge";
 
 export default function EventComponent({
   event,
+  collabUni,
   openModal,
   disabled,
   showButton,
 }: {
   event: EventModel;
+  collabUni?: University;
   openModal?: () => void;
   disabled?: boolean;
   showButton?: boolean;
@@ -32,6 +36,7 @@ export default function EventComponent({
   return (
     <>
       <div className="flex items-center w-full h-min">
+        {collabUni && <GroupBadge className="px-4 mr-2" campus={collabUni} />}
         <p className="text-gray-500 text-xs font-medium">
           {toddMMYYYY(event.dateStart)}
           {sameDay(event.dateStart, event.dateEnd)

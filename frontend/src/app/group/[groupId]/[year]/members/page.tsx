@@ -11,6 +11,13 @@ import { createMember, deleteMember, updateMember } from "@/lib/members";
 import { GroupId } from "@/models/Group";
 import { InitMember, MemberModel } from "@/models/Member";
 import { MetadataSelectModel } from "@/models/Metadata";
+import { University, universityIds } from "@/models/University";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "@headlessui/react";
 import { useContext, useEffect, useState } from "react";
 import { searchForMemberByName } from "services/attendanceService";
 
@@ -38,16 +45,43 @@ export default function GroupMember({
   }, [members]);
 
   useEffect(() => {
-    let prevSearchActive = searchActive;
-    setSearchActive(searchInput.length > 0);
-    if (searchInput.length > 0) {
-      const { suggested } = searchForMemberByName(members ?? [], searchInput);
-      setMembersShown(suggested);
-    } else if (prevSearchActive && searchInput.length === 0) {
-      setMembersShown(members ?? []);
-    }
+    const delayDebounceFn = setTimeout(() => {
+      let prevSearchActive = searchActive;
+      setSearchActive(searchInput.length > 0);
+      if (searchInput.length > 0) {
+        const { suggested } = searchForMemberByName(members ?? [], searchInput);
+        setMembersShown(suggested);
+      } else if (prevSearchActive && searchInput.length === 0) {
+        setMembersShown(members ?? []);
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
     // eslint-disable-next-line
   }, [searchInput]);
+
+  const campus = metadata?.find(
+    (m) => m.key === "Campus" && m.type === "select"
+  ) as MetadataSelectModel | undefined;
+
+  const [campusFilter, setCampusFilter] = useState<University | "Unselected">(
+    "Unselected"
+  );
+  useEffect(() => {
+    if (campusFilter === "Unselected") {
+      setMembersShown(members ?? []);
+    } else {
+      setMembersShown(
+        campus && members
+          ? members.filter(
+              (m) =>
+                m.metadata &&
+                campus.values[m.metadata[campus.id]] === campusFilter
+            )
+          : []
+      );
+    }
+    // eslint-disable-next-line
+  }, [campusFilter]);
 
   function closeModal() {
     setIsOpen(false);
@@ -62,14 +96,28 @@ export default function GroupMember({
     if (selectedMember) {
       if (selectedMember.id === "placeholder") {
         await promiseToast<MemberModel>(
-          createMember(params.groupId, selectedMember),
+          createMember(
+            campus && selectedMember.metadata
+              ? universityIds[
+                  campus.values[selectedMember.metadata[campus.id]]
+                ] ?? params.groupId
+              : params.groupId,
+            selectedMember
+          ),
           "Creating Member...",
           "Member Created!",
           "Could not create member."
         );
       } else {
         await promiseToast<void>(
-          updateMember(params.groupId, selectedMember),
+          updateMember(
+            campus && selectedMember.metadata
+              ? universityIds[
+                  campus.values[selectedMember.metadata[campus.id]]
+                ] ?? params.groupId
+              : params.groupId,
+            selectedMember
+          ),
           "Updating Member...",
           "Member Updated!",
           "Could not create member."
@@ -85,7 +133,14 @@ export default function GroupMember({
     setUpdatingDelete(true);
     if (group && selectedMember) {
       await promiseToast<void>(
-        deleteMember(group.id, selectedMember.id),
+        deleteMember(
+          campus && selectedMember.metadata
+            ? universityIds[
+                campus.values[selectedMember.metadata[campus.id]]
+              ] ?? params.groupId
+            : params.groupId,
+          selectedMember.id
+        ),
         "Deleting Member...",
         "Member Deleted!",
         "Could not delete member."
@@ -138,6 +193,31 @@ export default function GroupMember({
         />
       )}
       <h1 className="mx-4 mt-3 text-2xl mb-16">Members</h1>
+      <p>Filter Campus:</p>
+      <Listbox
+        value={campusFilter}
+        onChange={(filter) => setCampusFilter(filter)}
+      >
+        <ListboxButton>{campusFilter ?? "Unselected"}</ListboxButton>
+        <ListboxOptions
+          anchor="top"
+          transition
+          className="rounded-xl border border-white/5 bg-gray-100 p-1 focus:outline-none transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0"
+        >
+          {Object.keys(universityIds)
+            .concat("Unselected")
+            .map((uni, i) => (
+              <ListboxOption
+                key={i}
+                value={uni}
+                onClick={() => setCampusFilter(uni as University)}
+                className="group flex justify-between cursor-pointer items-center rounded-lg px-2 select-none data-[focus]:bg-white/10 data-[selected]:bg-gray-200 data-[focus]:bg-gray-200"
+              >
+                {uni}
+              </ListboxOption>
+            ))}
+        </ListboxOptions>
+      </Listbox>
       <div className="relative">
         <div className="mb-2">
           <AttendanceSearchBar

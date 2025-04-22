@@ -24,6 +24,7 @@ import { EventId, MemberInformation } from "@/models/Event";
 import { GroupId } from "@/models/Group";
 import { InitMember, MemberModel } from "@/models/Member";
 import { MetadataSelectModel } from "@/models/Metadata";
+import { universityIds } from "@/models/University";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import Draggable from "gsap/dist/Draggable";
@@ -87,22 +88,46 @@ export default function Event({
     setIsOpen(true);
   }
 
+  const campus = metadata?.find(
+    (m) => m.key === "Campus" && m.type === "select"
+  ) as MetadataSelectModel | undefined;
+
   async function editMember() {
     setUpdating(true);
     if (selectedMemberInfo.member.id === "placeholder") {
       const newMember = await createMember(
-        params.groupId,
+        campus && selectedMemberInfo.member.metadata
+          ? universityIds[
+              campus.values[selectedMemberInfo.member.metadata[campus.id]]
+            ] ?? params.groupId
+          : params.groupId,
         selectedMemberInfo.member
       );
       await promiseToast<void>(
-        addMemberToEvent(params.groupId, params.eventId, newMember.id),
+        addMemberToEvent(
+          groupId,
+          eventId,
+          campus && selectedMemberInfo.member.metadata
+            ? universityIds[
+                campus.values[selectedMemberInfo.member.metadata[campus.id]]
+              ] ?? params.groupId
+            : params.groupId,
+          newMember.id
+        ),
         "Creating and Adding Member...",
         "Member Created and Added!",
         "Could not create and added member."
       );
     } else {
       await promiseToast<void>(
-        updateMember(params.groupId, selectedMemberInfo.member),
+        updateMember(
+          campus && selectedMemberInfo.member.metadata
+            ? universityIds[
+                campus.values[selectedMemberInfo.member.metadata[campus.id]]
+              ] ?? params.groupId
+            : params.groupId,
+          selectedMemberInfo.member
+        ),
         "Updating Member...",
         "Member Updated!",
         "Could not update member."
@@ -116,11 +141,20 @@ export default function Event({
         );
         if (index !== -1) {
           await promiseToast<void>(
-            updateEventMembers(params.groupId, event.id, [
-              ...event.members.slice(0, index),
-              selectedMemberInfo,
-              ...event.members.slice(index + 1),
-            ]),
+            updateEventMembers(
+              groupId,
+              eventId,
+              campus && selectedMemberInfo.member.metadata
+                ? universityIds[
+                    campus.values[selectedMemberInfo.member.metadata[campus.id]]
+                  ] ?? params.groupId
+                : params.groupId,
+              [
+                ...event.members.slice(0, index),
+                selectedMemberInfo,
+                ...event.members.slice(index + 1),
+              ]
+            ),
             "Updating Sign in time...",
             "Sign in time Updated!",
             "Could not update sign in time."
@@ -177,33 +211,29 @@ export default function Event({
   }, [members, event]);
 
   useEffect(() => {
-    let prevSearchActive = searchActive;
-    setSearchActive(searchInput.length > 0);
-    if (searchInput.length > 0) {
-      setLoadAnimation(false);
-      const { suggested, notSuggested } = searchForMemberByName(
-        membersNotSignedIn,
-        searchInput
-      );
-      setMembersNotSignedIn(suggested.concat(notSuggested));
-      setIndex(suggested.length);
-      const { suggested: signedIn, notSuggested: signedInNotSuggested } =
-        searchForMemberInformationByName(membersSignedIn, searchInput);
-      setMembersSignedIn(signedIn.concat(signedInNotSuggested));
-      setIndexSignedIn(signedIn.length);
-    } else if (prevSearchActive && searchInput.length === 0) {
-      setIndex(0);
-      setIndexSignedIn(membersSignedIn.length);
-    }
+    const delayDebounceFn = setTimeout(() => {
+      let prevSearchActive = searchActive;
+      setSearchActive(searchInput.length > 0);
+      if (searchInput.length > 0) {
+        setLoadAnimation(false);
+        const { suggested, notSuggested } = searchForMemberByName(
+          membersNotSignedIn,
+          searchInput
+        );
+        setMembersNotSignedIn(suggested.concat(notSuggested));
+        setIndex(suggested.length);
+        const { suggested: signedIn, notSuggested: signedInNotSuggested } =
+          searchForMemberInformationByName(membersSignedIn, searchInput);
+        setMembersSignedIn(signedIn.concat(signedInNotSuggested));
+        setIndexSignedIn(signedIn.length);
+      } else if (prevSearchActive && searchInput.length === 0) {
+        setIndex(0);
+        setIndexSignedIn(membersSignedIn.length);
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
     // eslint-disable-next-line
   }, [searchInput]);
-
-  useEffect(() => {
-    if (searchInput.length === 0) {
-      setLoadAnimation(true);
-    }
-    // eslint-disable-next-line
-  }, [membersNotSignedIn]);
 
   async function deleteMemberIn() {
     setUpdatingDelete(true);
@@ -217,6 +247,11 @@ export default function Event({
           removeMemberFromEvent(
             groupId,
             eventId,
+            campus && selectedMemberInfo.member.metadata
+              ? universityIds[
+                  campus.values[selectedMemberInfo.member.metadata[campus.id]]
+                ] ?? params.groupId
+              : params.groupId,
             event.members?.find(
               (m) => m.member.id === selectedMemberInfo.member.id
             )
@@ -227,7 +262,14 @@ export default function Event({
         );
       }
       await promiseToast<void>(
-        deleteMember(params.groupId, selectedMemberInfo.member.id),
+        deleteMember(
+          campus && selectedMemberInfo.member.metadata
+            ? universityIds[
+                campus.values[selectedMemberInfo.member.metadata[campus.id]]
+              ] ?? params.groupId
+            : params.groupId,
+          selectedMemberInfo.member.id
+        ),
         "Deleting Member...",
         "Member Deleted!",
         "Could not delete member."
@@ -338,7 +380,16 @@ export default function Event({
                 action={(memberInfo: MemberInformation) => {
                   const { member } = memberInfo;
                   promiseToast<void>(
-                    addMemberToEvent(groupId, eventId, member.id),
+                    addMemberToEvent(
+                      groupId,
+                      eventId,
+                      campus && member.metadata
+                        ? universityIds[
+                            campus.values[member.metadata[campus.id]]
+                          ] ?? params.groupId
+                        : params.groupId,
+                      member.id
+                    ),
                     `Adding ${member.name}...`,
                     `${member.name} Added!`,
                     `Could not add ${member.name}.`
@@ -369,6 +420,11 @@ export default function Event({
                     removeMemberFromEvent(
                       groupId,
                       eventId,
+                      campus && member.metadata
+                        ? universityIds[
+                            campus.values[member.metadata[campus.id]]
+                          ] ?? params.groupId
+                        : params.groupId,
                       event.members?.find((m) => m.member.id === member.id)
                     ),
                     `Removing ${member.name}...`,
