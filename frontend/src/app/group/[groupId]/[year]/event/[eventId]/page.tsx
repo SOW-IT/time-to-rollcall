@@ -155,20 +155,11 @@ export default function Event({
         );
         if (index !== -1) {
           await promiseToast<void>(
-            updateEventMembers(
-              groupId,
-              eventId,
-              campus && selectedMemberInfo.member.metadata
-                ? universityIds[
-                    campus.values[selectedMemberInfo.member.metadata[campus.id]]
-                  ] ?? params.groupId
-                : params.groupId,
-              [
-                ...event.members.slice(0, index),
-                selectedMemberInfo,
-                ...event.members.slice(index + 1),
-              ]
-            ),
+            updateEventMembers(groupId, eventId, [
+              ...event.members.slice(0, index),
+              selectedMemberInfo,
+              ...event.members.slice(index + 1),
+            ]),
             "Updating Sign in time...",
             "Sign in time Updated!",
             "Could not update sign in time."

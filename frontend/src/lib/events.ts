@@ -113,14 +113,13 @@ function convertEventToDocument(groupId: GroupId, event: EventModel) {
 export async function updateEventMembers(
   groupId: GroupId,
   eventId: EventId,
-  memberGroupId: GroupId,
   members: MemberInformation[]
 ) {
   await updateDoc(doc(firestore, "groups", groupId, "events", eventId), {
     members:
       members?.map((m) => ({
         ...m,
-        member: convertMemberIdToReference(memberGroupId, m.member.id),
+        member: m.member.docRef,
       })) ?? [],
   });
 }
