@@ -159,7 +159,7 @@ export default function EditEvent({
                         disabled={!submitEventForm.name}
                       />
                     </TabList>
-                    <TabPanels className="mt-3 h-56">
+                    <TabPanels className="mt-3 h-60">
                       <TabPanel>
                         <ul>
                           <DialogTitle
@@ -304,10 +304,7 @@ export default function EditEvent({
                             </p>
                             {Object.entries(universityIds).map(
                               ([campus, id], index) => (
-                                <div
-                                  key={index}
-                                  className="flex justify-center gap-2 my-2"
-                                >
+                                <div key={index} className="gap-2 my-2">
                                   <GroupBadge
                                     disabled={id === groupId}
                                     campus={campus}

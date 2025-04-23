@@ -97,6 +97,7 @@ export default function GroupMember({
 
   async function editMember() {
     setUpdating(true);
+    selectedMember.name = selectedMember.name.trim();
     if (selectedMember) {
       if (selectedMember.id === "placeholder") {
         await promiseToast<MemberModel>(
