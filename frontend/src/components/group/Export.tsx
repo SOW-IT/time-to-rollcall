@@ -11,7 +11,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Fragment, useContext, useEffect, useState } from "react";
 import Tag from "../event/Tag";
 import Loader from "../Loader";
-import { MetadataContext } from "@/lib/context";
+import { EventsContext, MetadataContext } from "@/lib/context";
 import { promiseToast } from "@/helper/Toast";
 import { MetadataInputModel, MetadataSelectModel } from "@/models/Metadata";
 import { GroupId } from "@/models/Group";
@@ -27,6 +27,7 @@ export default function Export({
   closeModal: () => void;
   tags?: TagModel[];
 }) {
+  const events = useContext(EventsContext);
   const metadata = useContext(MetadataContext);
   const [exportTags, setExportTags] = useState<TagModel[]>([]);
   const [exportMetadata, setExportMetadata] = useState<
@@ -221,11 +222,12 @@ export default function Export({
                       type="button"
                       className="mt-4 rounded-3xl border border-transparent bg-gray-800 hover:bg-black active:bg-black px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={async () => {
-                        if (exportMetadata !== null) {
+                        if (events && exportMetadata !== null) {
                           setUpdating(true);
                           await promiseToast<void>(
                             downloadEventsToExcel(
                               groupId,
+                              events,
                               exportTags,
                               exportMetadata
                             ),

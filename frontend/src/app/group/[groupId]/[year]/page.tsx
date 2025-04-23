@@ -263,7 +263,9 @@ export default function Group({
                     router.push(
                       `${Path.Group}/${event.groupId ?? group.id}/${
                         params.year
-                      }/event/${event.id}`
+                      }/event/${event.id}${
+                        event.groupId ? "?fromGroupId=" + group.id : ""
+                      }`
                     )
                   }
                 >

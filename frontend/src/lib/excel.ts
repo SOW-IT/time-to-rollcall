@@ -1,12 +1,12 @@
 import ExcelJS from "exceljs";
-import { getEventsByTag } from "./events";
 import { TagModel } from "@/models/Tag";
 import { MetadataModel, MetadataSelectModel } from "@/models/Metadata";
 import { saveAs } from "file-saver";
-import { GroupId } from "@/models/Group";
 import { toddMMYYYY, sameDay, hoursAndMinutes } from "@/helper/Time";
 import { MemberMetadataModel } from "@/models/Member";
 import { EventModel } from "@/models/Event";
+import { getEvent } from "./events";
+import { GroupId } from "@/models/Group";
 
 async function addEventToWorkbook(
   workbook: ExcelJS.Workbook,
@@ -88,24 +88,33 @@ async function addEventToWorkbook(
 
 export async function downloadEventsToExcel(
   groupId: GroupId,
+  events: EventModel[],
   tags: TagModel[],
   metadata?: MetadataModel[]
 ) {
-  const events = await getEventsByTag(groupId, tags);
-  const workbook = new ExcelJS.Workbook();
-  for (const event of events) {
-    addEventToWorkbook(workbook, event, metadata);
-  }
-  workbook.xlsx.writeBuffer().then((buffer) => {
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    if (tags.length === 0) {
-      saveAs(blob, `Attendance_All.xlsx`);
-    } else {
-      saveAs(blob, `Attendance_[${tags.map((t) => t.name).join(", ")}].xlsx`);
+  if (events) {
+    const filtered =
+      tags.length > 0
+        ? events.filter((e) =>
+            e.tags.some((t) => tags.map((it) => it.name).includes(t.name))
+          )
+        : events;
+    const workbook = new ExcelJS.Workbook();
+    for (const f of filtered) {
+      const event = await getEvent(f.groupId ?? groupId, f.id);
+      addEventToWorkbook(workbook, event, metadata);
     }
-  });
+    workbook.xlsx.writeBuffer().then((buffer) => {
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      if (tags.length === 0) {
+        saveAs(blob, `Attendance_All.xlsx`);
+      } else {
+        saveAs(blob, `Attendance_[${tags.map((t) => t.name).join(", ")}].xlsx`);
+      }
+    });
+  }
 }
 
 export async function downloadEventToExcel(

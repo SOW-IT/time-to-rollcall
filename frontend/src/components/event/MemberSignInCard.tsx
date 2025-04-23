@@ -217,7 +217,7 @@ function MemberSignInCard({
     events
       .filter((e) => e.dateStart < event.dateStart)
       .filter((e) =>
-        event.tags?.every((t) => e.tags.map((t) => t.id).includes(t.id))
+        event.tags?.every((t) => e.tags.map((t) => t.name).includes(t.name))
       );
 
   function PastEvents() {
