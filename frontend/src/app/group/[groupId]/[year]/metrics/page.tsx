@@ -5,7 +5,7 @@ import { Path } from "@/helper/Path";
 import { allowedYears, currentYearStr } from "@/helper/Time";
 import { EventsContext, TagsContext } from "@/lib/context";
 import { GroupId } from "@/models/Group";
-import { TagId, TagModel } from "@/models/Tag";
+import { TagModel } from "@/models/Tag";
 import {
   Listbox,
   ListboxButton,
@@ -36,7 +36,7 @@ export default function Metrics({
   const events = useContext(EventsContext);
   const tags = useContext(TagsContext);
   const [metricByTag, setMetricByTag] = useState<{
-    [tagId: TagId]: {
+    [tagName: string]: {
       attendance: { name: string; Attendance: number }[];
       average?: { name: string; Average: number; colour?: string };
     };
@@ -47,24 +47,23 @@ export default function Metrics({
     if (tags && events) {
       let maxNumber = 0;
       let eventsByTag: {
-        [tagId: TagId]: {
+        [tagName: string]: {
           attendance: { name: string; Attendance: number }[];
           average?: { name: string; Average: number; colour?: string };
         };
       } = {};
       for (const tag of tags) {
-        eventsByTag[tag.id] = { attendance: [] };
+        eventsByTag[tag.name] = { attendance: [] };
       }
       for (const event of events) {
-        const eventTags = event.tags.map((t) => t.id);
         const attendanceNumbers = event.members?.length ?? 0;
         if (maxNumber < attendanceNumbers) {
           maxNumber = attendanceNumbers;
         }
 
-        for (const tagId of eventTags) {
-          if (eventsByTag[tagId]) {
-            eventsByTag[tagId].attendance.unshift({
+        for (const tag of event.tags) {
+          if (eventsByTag[tag.name]) {
+            eventsByTag[tag.name].attendance.unshift({
               name: event.name,
               Attendance: attendanceNumbers,
             });
@@ -72,15 +71,15 @@ export default function Metrics({
         }
       }
       for (const tag of tags) {
-        eventsByTag[tag.id].average = {
+        eventsByTag[tag.name].average = {
           name: tag.name,
           colour: tag.colour,
           Average:
-            eventsByTag[tag.id].attendance.reduce(
+            eventsByTag[tag.name].attendance.reduce(
               (accumulator, currentValue) =>
                 accumulator + currentValue.Attendance,
               0
-            ) / eventsByTag[tag.id].attendance.length,
+            ) / eventsByTag[tag.name].attendance.length,
         };
       }
       setMetricByTag(eventsByTag);
@@ -165,8 +164,8 @@ export default function Metrics({
             </BarChart>
           </ResponsiveContainer>
         </div>
-        {Object.entries(metricByTag).map(([tId, m], i) => {
-          const tag = tags?.find((t) => t.id === tId) as TagModel;
+        {Object.entries(metricByTag).map(([tName, m], i) => {
+          const tag = tags?.find((t) => t.name === tName) as TagModel;
           return (
             <div key={i}>
               <Tag tag={tag} disabled />

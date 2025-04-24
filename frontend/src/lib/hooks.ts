@@ -226,7 +226,7 @@ export function useEventsListener(
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
     where("collaboration", "array-contains", groupId)
   );
-  const { data: events3, error } = useFirestoreCol<EventModel>(
+  const { data: events3 } = useFirestoreCol<EventModel>(
     firestore,
     `groups/${universityIds[University.UTS]}/events`,
     user !== null &&
@@ -282,7 +282,8 @@ export function useEventsListener(
         ...e,
         groupId: universityIds[University.MACQ],
       })) ?? []
-    );
+    )
+    .sort((a, b) => (a.dateStart < b.dateStart ? 1 : -1));
 }
 
 export function useEventListener(

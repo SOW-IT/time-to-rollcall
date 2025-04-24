@@ -36,4 +36,5 @@ export const universityNames: Record<string, University> = {
   CZHRnKJ8SDnfMIw64WJu: University.MACQ,
   MUSmSaufEfgdJUX4Kx4G: University.USYD,
   wrsDV3XfwQB4RD7BxKD2: University.UTS,
+  T4qzZ5X3pGqJgJ8CMOtk: University.SOW,
 };
