@@ -284,13 +284,45 @@ export default function GroupAdmin() {
     }
   };
 
+  const removeStray = async () => {
+    console.log("start");
+    for (const groupId of [
+      "ccSgQTXvLRnin0OjwvRM",
+      "CZHRnKJ8SDnfMIw64WJu",
+      "MUSmSaufEfgdJUX4Kx4G",
+      "wrsDV3XfwQB4RD7BxKD2",
+    ]) {
+      console.log(groupId);
+      const events = await getDocs(
+        collection(firestore, "groups", groupId, "events")
+      );
+      for (const e of events.docs) {
+        for (const member of e.data().members) {
+          const d = await getDoc(member.member);
+          if (!d.exists()) {
+            console.log("Removing:", member.member);
+            await updateDoc(doc(firestore, "groups", groupId, "events", e.id), {
+              members: e
+                .data()
+                .members.filter(
+                  (m: { member: DocumentReference }) =>
+                    m.member !== member.member
+                ),
+            });
+          }
+        }
+      }
+    }
+    console.log("end");
+  };
+
   return (
     user && (
       <>
         <Topbar />
         <div className="mx-4">
           <h1 className="text-2xl text-gray-700 mb-4">Admin Page</h1>
-          <button
+          {/* <button
             type="button"
             className="p-2 bg-slate-200"
             onClick={() => move("ccSgQTXvLRnin0OjwvRM", ["2", "3", "4"])}
@@ -331,13 +363,20 @@ export default function GroupAdmin() {
             onClick={() => combineSameName()}
           >
             Combine Same Name
-          </button>
+          </button> */}
           <button
             type="button"
             className="p-2 bg-slate-200"
             onClick={() => removeDuplicates()}
           >
             Remove Duplicates
+          </button>
+          <button
+            type="button"
+            className="p-2 bg-slate-200"
+            onClick={() => removeStray()}
+          >
+            Remove Stray
           </button>
         </div>
       </>

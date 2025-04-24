@@ -308,7 +308,7 @@ function MemberSignInCard({
                   .every((e) =>
                     e.members?.some((m) => m.member.id === memberInfo.member.id)
                   ) && (
-                  <FireIcon className="absolute -top-4 -left-4 h-5 w-5 z-40 text-green-600" />
+                  <FireIcon className="absolute -top-4 -left-4 h-5 w-5 z-30 text-green-600" />
                 )}
               <Image
                 src={

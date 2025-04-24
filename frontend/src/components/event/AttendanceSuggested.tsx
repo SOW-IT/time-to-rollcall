@@ -24,7 +24,7 @@ export default function AttendanceSuggested({
 }: AttendanceSuggested) {
   const mobile = useMediaQuery("(max-width: 768px)");
   return (
-    <div className="z-20 bg-white">
+    <div className="z-20 bg-white mb-12">
       {(!mobile || suggested.length > 0 || searchInputLength > 0) && (
         <div className="flex items-center justify-between mx-4 mb-2 mt-2">
           <p className="text-gray-500 text-[10px] font-light align-middle">

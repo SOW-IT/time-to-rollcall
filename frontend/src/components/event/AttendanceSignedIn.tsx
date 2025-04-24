@@ -17,7 +17,7 @@ export default function AttendanceSignedIn({
   edit,
 }: AttendanceSignedInProps) {
   return (
-    <div className="mt-2 bg-white mb-28">
+    <div className="mt-2 bg-white mb-12">
       <div className="flex items-center mx-4 mb-2">
         <p className="text-gray-500 text-[10px] font-light align-middle">
           SIGNED IN

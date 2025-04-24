@@ -38,6 +38,8 @@ import {
 
 gsap.registerPlugin(Draggable, useGSAP);
 
+const MAX_INDEX = 10;
+
 export default function Event({
   params,
 }: {
@@ -196,15 +198,15 @@ export default function Event({
           searchInput
         );
         setMembersNotSignedIn(suggested.concat(notSuggested));
-        setIndex(suggested.length);
+        setIndex(Math.min(MAX_INDEX, suggested.length));
         const { suggested: signedIn, notSuggested: signedInNotSuggested } =
           searchForMemberInformationByName(membersSignedIn, searchInput);
         setMembersSignedIn(signedIn.concat(signedInNotSuggested));
-        setIndexSignedIn(signedIn.length);
+        setIndexSignedIn(Math.min(MAX_INDEX, signedIn.length));
       } else {
         setMembersNotSignedIn(membersNotSignedIn);
         setMembersSignedIn(membersSignedIn);
-        setIndexSignedIn(membersSignedIn.length);
+        setIndexSignedIn(Math.min(MAX_INDEX, membersSignedIn.length));
       }
 
       if (loading) {
@@ -226,14 +228,14 @@ export default function Event({
           searchInput
         );
         setMembersNotSignedIn(suggested.concat(notSuggested));
-        setIndex(suggested.length);
+        setIndex(Math.min(MAX_INDEX, suggested.length));
         const { suggested: signedIn, notSuggested: signedInNotSuggested } =
           searchForMemberInformationByName(membersSignedIn, searchInput);
         setMembersSignedIn(signedIn.concat(signedInNotSuggested));
-        setIndexSignedIn(signedIn.length);
+        setIndexSignedIn(Math.min(MAX_INDEX, signedIn.length));
       } else if (prevSearchActive && searchInput.length === 0) {
         setIndex(0);
-        setIndexSignedIn(membersSignedIn.length);
+        setIndexSignedIn(Math.min(MAX_INDEX, membersSignedIn.length));
       }
     }, 500);
     return () => clearTimeout(delayDebounceFn);
@@ -351,7 +353,7 @@ export default function Event({
             searchInput={searchInput}
             setSearchInput={setSearchInput}
           />
-          <div className="md:grid md:grid-cols-2 md:grid-flow-row z-30 mb-12">
+          <div className="md:grid md:grid-cols-2 md:grid-flow-row z-30">
             <div className="w-full">
               <AttendanceSuggested
                 disabled={!toggleEdit}
