@@ -104,7 +104,9 @@ export default function Metrics({
             <Listbox
               value={params.year}
               onChange={(value) =>
-                router.push(Path.Group + "/" + params.groupId + "/" + value)
+                router.push(
+                  Path.Group + "/" + params.groupId + "/" + value + "/metrics"
+                )
               }
             >
               <div className="flex justify-between">
