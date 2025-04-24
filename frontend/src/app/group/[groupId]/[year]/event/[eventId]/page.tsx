@@ -450,7 +450,12 @@ export default function Event({
           <div className="flex flex-col fixed z-40 bottom-0 w-full">
             <button
               type="button"
-              className="text-gray-700 text-sm py-4 px-1.5 w-full font-light text-center bg-green-200 active:bg-green-300"
+              disabled={params.year !== currentYearStr}
+              className={`text-gray-700 text-sm py-4 px-1.5 w-full font-light text-center ${
+                params.year === currentYearStr
+                  ? "bg-green-200 active:bg-green-300"
+                  : "bg-gray-200"
+              }`}
               onClick={() => {
                 if (toggleEdit) {
                   setSelectedMemberInfo({
