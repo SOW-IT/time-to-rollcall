@@ -43,6 +43,18 @@ export default function EditGroup({
   const [deleteConfirmationIsOpen, setDeleteConfirmationIsOpen] =
     useState(false);
 
+  function findDuplicates<T>(arr: T[]): boolean {
+    const seen = new Set<T>();
+    return (
+      arr.filter((item) => seen.has(item) || (seen.add(item) && false)).length >
+      0
+    );
+  }
+
+  const duplicateTagsExist = findDuplicates(
+    tags?.map((t) => t.name.trim()) ?? []
+  );
+
   return (
     <>
       <DeleteConfirmation
@@ -125,8 +137,9 @@ export default function EditGroup({
                         <div className="flex justify-between items-center">
                           <p className="text-sm text-gray-900">Tags</p>
                           <button
+                            disabled={duplicateTagsExist}
                             type="button"
-                            className="rounded-3xl border-transparent border-2 bg-black px-3 py-1 mx-1 my-1 text-xs font-light text-white"
+                            className="rounded-3xl border-transparent border-2 bg-black px-3 py-1 mx-1 my-1 text-xs font-light text-white disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={() => setTags([...tags, InitTag])}
                           >
                             Create Tag
@@ -247,6 +260,11 @@ export default function EditGroup({
                         </div>
                       </div>
                     )}
+                    {duplicateTagsExist && (
+                      <p className="text-red-600 text-xs">
+                        Tags must not have the same name
+                      </p>
+                    )}
                   </div>
                   {updating ? (
                     <div className="bottom-2 w-full absolute flex justify-center items-center">
@@ -256,7 +274,11 @@ export default function EditGroup({
                     <div className="flex justify-center w-full bottom-2 absolute z-50 ">
                       <button
                         type="button"
-                        disabled={!group.name || tags?.some((t) => !t.name)}
+                        disabled={
+                          !group.name ||
+                          tags?.some((t) => !t.name) ||
+                          duplicateTagsExist
+                        }
                         className="mt-4 rounded-3xl border border-transparent bg-black px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={submit}
                       >

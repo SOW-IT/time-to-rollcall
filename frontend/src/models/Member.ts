@@ -45,7 +45,7 @@ export const getYearString = (year?: string) => {
     case "6+":
       return "6th Year+ • ";
     default:
-      return "Member • ";
+      return "";
   }
 };
 

@@ -451,7 +451,7 @@ export default function Event({
             <button
               type="button"
               disabled={params.year !== currentYearStr}
-              className={`text-gray-700 text-sm py-4 px-1.5 w-full font-light text-center ${
+              className={`text-gray-700 text-sm py-4 px-1.5 w-full font-light text-center disabled:cursor-not-allowed ${
                 params.year === currentYearStr
                   ? "bg-green-200 active:bg-green-300"
                   : "bg-gray-200"

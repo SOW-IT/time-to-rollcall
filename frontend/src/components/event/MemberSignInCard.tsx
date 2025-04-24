@@ -5,6 +5,7 @@ import {
   ArrowRightIcon,
   ArrowUturnLeftIcon,
   FireIcon,
+  SparklesIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import gsap from "gsap";
@@ -297,7 +298,7 @@ function MemberSignInCard({
               pastEvents?.filter((e) =>
                 e.members?.some((m) => m.member.id === memberInfo.member.id)
               ).length < 3 ? (
-                <div className="absolute -top-4 -left-4 z-30">NEW</div>
+                <SparklesIcon className="absolute -top-1 -left-3 h-5 w-5 z-30 text-orange-300" />
               ) : (
                 <></>
               )}
@@ -308,7 +309,7 @@ function MemberSignInCard({
                   .every((e) =>
                     e.members?.some((m) => m.member.id === memberInfo.member.id)
                   ) && (
-                  <FireIcon className="absolute -top-4 -left-4 h-5 w-5 z-30 text-green-600" />
+                  <FireIcon className="absolute -top-1 -left-3 h-5 w-5 z-30 text-blue-600" />
                 )}
               <Image
                 src={
