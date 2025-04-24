@@ -284,7 +284,7 @@ export default function Topbar({
             {year}
           </button>
         )}
-        {!disabled && (
+        {year !== currentYearStr && !disabled && (
           <p className="rounded-lg bg-gray-200 p-1 px-2 font-bold">{year}</p>
         )}
         {event ? (

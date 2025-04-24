@@ -52,8 +52,8 @@ export default function EventComponent({
       </div>
       {collabUnis && (
         <div className="flex mt-3">
-          {collabUnis.map((cu) => (
-            <GroupBadge className="px-4 mr-2" campus={cu} />
+          {collabUnis.map((cu, i) => (
+            <GroupBadge key={i} className="px-4 mr-2" campus={cu} />
           ))}
         </div>
       )}
