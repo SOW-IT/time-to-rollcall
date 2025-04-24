@@ -38,7 +38,7 @@ export default function Metrics({
   const [metricByTag, setMetricByTag] = useState<{
     [tagName: string]: {
       attendance: { name: string; Attendance: number }[];
-      average?: { name: string; Average: number; colour?: string };
+      average?: { name: string; Average: string; colour?: string };
     };
   }>({});
   const [maxNumber, setMaxNumber] = useState(0);
@@ -49,7 +49,7 @@ export default function Metrics({
       let eventsByTag: {
         [tagName: string]: {
           attendance: { name: string; Attendance: number }[];
-          average?: { name: string; Average: number; colour?: string };
+          average?: { name: string; Average: string; colour?: string };
         };
       } = {};
       for (const tag of tags) {
@@ -74,12 +74,13 @@ export default function Metrics({
         eventsByTag[tag.name].average = {
           name: tag.name,
           colour: tag.colour,
-          Average:
+          Average: Number(
             eventsByTag[tag.name].attendance.reduce(
               (accumulator, currentValue) =>
                 accumulator + currentValue.Attendance,
               0
-            ) / eventsByTag[tag.name].attendance.length,
+            ) / eventsByTag[tag.name].attendance.length
+          ).toFixed(2),
         };
       }
       setMetricByTag(eventsByTag);
