@@ -227,7 +227,7 @@ function MemberSignInCard({
     return (
       <div className="flex p-2">
         {pastEvents
-          ?.slice(-5)
+          ?.slice(0, 5)
           .reverse()
           .map((e, i) => (
             <div key={i} className="flex align-middle gap-1 m-1">
@@ -303,9 +303,9 @@ function MemberSignInCard({
                 <></>
               )}
               {pastEvents &&
-                pastEvents?.length >= 3 &&
+                pastEvents.slice(0, 3).length === 3 &&
                 pastEvents
-                  ?.slice(-3)
+                  .slice(0, 3)
                   .every((e) =>
                     e.members?.some((m) => m.member.id === memberInfo.member.id)
                   ) && (
