@@ -44,7 +44,11 @@ function MemberCard({ member, action }: MemberCardProps) {
 
   return (
     <div
-      className="relative z-30 overflow-hidden cursor-pointer flex h-20 w-full px-4 bg-white items-center active:bg-gray-100"
+      className={`relative z-30 overflow-hidden cursor-pointer flex h-20 w-full px-4 items-center active:bg-gray-100 ${
+        member.id === "4C3jendaRf7ArgGe9x2E"
+          ? "bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500"
+          : ""
+      }`}
       onClick={action}
     >
       <Image
@@ -62,7 +66,7 @@ function MemberCard({ member, action }: MemberCardProps) {
       />
       <div>
         <h3 className="font-light mb-2">{member.name}</h3>
-        <p className="text-xs text-gray-500 font-extralight">
+        <p className={"text-xs text-gray-500 font-extralight"}>
           {year && member.metadata?.[year.id]
             ? getYearString(year.values?.[member.metadata?.[year.id]]) ??
               getYearString(member.metadata?.[year.id])

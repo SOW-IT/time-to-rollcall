@@ -144,11 +144,23 @@ export function useMembersListener(
       : false,
     orderBy("name", "asc")
   );
+  const { data: members5 } = useFirestoreCol<MemberModel>(
+    firestore,
+    `groups/${universityIds[University.SOW]}/members/${year}/members`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.SOW] &&
+      universityIds[University.SOW]
+      ? true
+      : false,
+    orderBy("name", "asc")
+  );
   return members
     ?.concat(members1 ?? [])
     .concat(members2 ?? [])
     .concat(members3 ?? [])
-    .concat(members4 ?? []);
+    .concat(members4 ?? [])
+    .concat(members5 ?? []);
 }
 
 export function useMetadataListener(
@@ -260,6 +272,23 @@ export function useEventsListener(
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
     where("collaboration", "array-contains", groupId)
   );
+  const { data: events5 } = useFirestoreCol<EventModel>(
+    firestore,
+    `groups/${universityIds[University.SOW]}/events`,
+    user !== null &&
+      Object.values(universityIds).includes(groupId ?? "") &&
+      groupId !== universityIds[University.SOW] &&
+      universityIds[University.SOW]
+      ? true
+      : false,
+    orderBy("dateEnd", "desc"),
+    undefined,
+    undefined,
+    "members",
+    where("dateStart", ">=", new Date(`${year}-01-01`)),
+    where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
+    where("collaboration", "array-contains", groupId)
+  );
   return events
     ?.concat(
       events1?.map((e) => ({
@@ -281,6 +310,12 @@ export function useEventsListener(
       events4?.map((e) => ({
         ...e,
         groupId: universityIds[University.MACQ],
+      })) ?? []
+    )
+    .concat(
+      events5?.map((e) => ({
+        ...e,
+        groupId: universityIds[University.SOW],
       })) ?? []
     )
     .sort((a, b) => (a.dateStart < b.dateStart ? 1 : -1));

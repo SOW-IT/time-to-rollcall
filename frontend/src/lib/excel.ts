@@ -13,7 +13,8 @@ async function addEventToWorkbook(
   event: EventModel,
   metadata?: MetadataModel[]
 ) {
-  const worksheet = workbook.addWorksheet(event.name);
+  const invalidChars = /[*?:\\\/[\]]/g;
+  const worksheet = workbook.addWorksheet(event.name.replace(invalidChars, ""));
   // Add event details at the top
   worksheet.addRow(["Name", event.name]);
   worksheet.addRow([
