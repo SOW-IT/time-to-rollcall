@@ -202,11 +202,11 @@ export default function Event({
         const { suggested: signedIn, notSuggested: signedInNotSuggested } =
           searchForMemberInformationByName(membersSignedIn, searchInput);
         setMembersSignedIn(signedIn.concat(signedInNotSuggested));
-        setIndexSignedIn(Math.min(MAX_INDEX, signedIn.length));
+        setIndexSignedIn(signedIn.length);
       } else {
         setMembersNotSignedIn(membersNotSignedIn);
         setMembersSignedIn(membersSignedIn);
-        setIndexSignedIn(Math.min(MAX_INDEX, membersSignedIn.length));
+        setIndexSignedIn(membersSignedIn.length);
       }
 
       if (loading) {
@@ -232,10 +232,10 @@ export default function Event({
         const { suggested: signedIn, notSuggested: signedInNotSuggested } =
           searchForMemberInformationByName(membersSignedIn, searchInput);
         setMembersSignedIn(signedIn.concat(signedInNotSuggested));
-        setIndexSignedIn(Math.min(MAX_INDEX, signedIn.length));
+        setIndexSignedIn(signedIn.length);
       } else if (prevSearchActive && searchInput.length === 0) {
         setIndex(0);
-        setIndexSignedIn(Math.min(MAX_INDEX, membersSignedIn.length));
+        setIndexSignedIn(membersSignedIn.length);
       }
     }, 500);
     return () => clearTimeout(delayDebounceFn);
