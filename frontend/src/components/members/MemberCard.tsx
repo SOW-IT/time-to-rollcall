@@ -44,11 +44,7 @@ function MemberCard({ member, action }: MemberCardProps) {
 
   return (
     <div
-      className={`relative z-30 overflow-hidden cursor-pointer flex h-20 w-full px-4 items-center active:bg-gray-100 ${
-        member.id === "4C3jendaRf7ArgGe9x2E"
-          ? "bg-gradient-to-r from-red-500 via-yellow-500 to-blue-500"
-          : ""
-      }`}
+      className={`relative z-30 overflow-hidden cursor-pointer flex h-20 w-full px-4 items-center active:bg-gray-100`}
       onClick={action}
     >
       <Image
