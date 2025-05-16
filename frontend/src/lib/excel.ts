@@ -8,6 +8,16 @@ import { EventModel } from "@/models/Event";
 import { getEvent } from "./events";
 import { GroupId } from "@/models/Group";
 
+function zipLongest<U, T extends any[][]>(
+  filler: U,
+  ...arrays: T
+): { [I in keyof T]: T[I] extends (infer V)[] ? V | U : never }[] {
+  const maxLength = Math.max(...arrays.map((arr) => arr.length));
+  return Array.from({ length: maxLength }, (_, i) =>
+    arrays.map((arr) => (i < arr.length ? arr[i] : filler))
+  ) as any;
+}
+
 async function addEventToWorkbook(
   workbook: ExcelJS.Workbook,
   event: EventModel,
@@ -41,8 +51,11 @@ async function addEventToWorkbook(
     "Sign In",
     "Name",
     "Email",
-    // "Notes",
     ...(metadata?.map((md) => md.key) ?? []),
+    "",
+    "Metadata",
+    "Value",
+    "Count",
   ];
 
   const headerRow = worksheet.getRow(5);
@@ -65,26 +78,50 @@ async function addEventToWorkbook(
     { key: "signInTime", width: 20 },
     { key: "name", width: 20 },
     { key: "email", width: 35 },
-    // { key: "notes", width: 35 },
-  ].concat(metadata ? metadata.map((md) => ({ key: md.id, width: 30 })) : []);
+    ...(metadata ? metadata.map((md) => ({ key: md.id, width: 30 })) : []),
+    { key: "numbers", width: 20 },
+    { key: "metadata", width: 20 },
+    { key: "value", width: 35 },
+    { key: "count", width: 10 },
+  ];
 
-  event.members?.map((info) =>
+  const mdNumbers = metadata
+    ?.filter((md) => md.type === "select")
+    .flatMap((md) =>
+      Object.entries((md as MetadataSelectModel).values)
+        .map(([k, v], i) => ({
+          metadata: i === 0 ? md.key : "",
+          value: v,
+          count: event.members?.filter((m) => m.member.metadata?.[md.id] === k)
+            .length,
+        }))
+        .concat([{ metadata: "", value: "", count: undefined }])
+    );
+
+  for (const [mdn, em] of zipLongest(
+    null,
+    mdNumbers ?? [],
+    event.members ?? []
+  )) {
     worksheet.addRow({
-      signInTime: info.signInTime ? toddMMYYYY(info.signInTime) : "",
-      name: info.member.name,
-      email: info.member.email,
-      notes: info.notes,
+      signInTime: em?.signInTime ? toddMMYYYY(em?.signInTime) : "",
+      name: em?.member.name,
+      email: em?.member.email,
+      notes: em?.notes,
       ...metadata?.reduce((acc, md) => {
         acc[md.id] =
           md.type === "input"
-            ? info.member.metadata?.[md.id] ?? ""
+            ? em?.member.metadata?.[md.id] ?? ""
             : (md as MetadataSelectModel).values[
-                info.member.metadata?.[md.id] ?? ""
+                em?.member.metadata?.[md.id] ?? ""
               ];
         return acc;
       }, {} as MemberMetadataModel),
-    })
-  );
+      metadata: mdn?.metadata,
+      value: mdn?.value,
+      count: mdn?.count,
+    });
+  }
 }
 
 export async function downloadEventsToExcel(
