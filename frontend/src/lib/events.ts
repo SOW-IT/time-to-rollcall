@@ -12,6 +12,7 @@ import {
   deleteDoc,
   where,
   Timestamp,
+  DocumentReference,
 } from "firebase/firestore";
 import {
   convertCollectionToJavascript,
@@ -22,9 +23,7 @@ import {
 import { EventId, EventModel, MemberInformation } from "@/models/Event";
 import { GroupId } from "@/models/Group";
 import { convertTagIdToReference } from "./tags";
-import { MemberId } from "@/models/Member";
 import { convertMemberIdToReference } from "./members";
-import { currentYearStr } from "@/helper/Time";
 import { TagModel } from "@/models/Tag";
 
 export async function getEventsAsc(groupId: GroupId) {
@@ -120,7 +119,7 @@ export async function updateEventMembers(
     members:
       members?.map((m) => ({
         ...m,
-        member: convertMemberIdToReference(groupId, m.member.id),
+        member: m.member.docRef,
       })) ?? [],
   });
 }
@@ -128,19 +127,11 @@ export async function updateEventMembers(
 export async function addMemberToEvent(
   groupId: GroupId,
   eventId: EventId,
-  memberId: MemberId
+  memberDocRef: DocumentReference
 ) {
   await updateDoc(doc(firestore, "groups", groupId, "events", eventId), {
     members: arrayUnion({
-      member: doc(
-        firestore,
-        "groups",
-        groupId,
-        "members",
-        currentYearStr,
-        "members",
-        memberId
-      ),
+      member: memberDocRef,
       signInTime: new Date(),
     }),
   });

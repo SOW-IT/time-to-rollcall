@@ -34,7 +34,7 @@ export default function Botbar({
                 key={i}
                 className={
                   "inline-flex flex-col items-center justify-center px-3 py-3 my-1 h-8 rounded-full " +
-                  (filter.name === f.name ? "bg-white" : "")
+                  (filter.name === f.name ? "bg-white" : "active:bg-white")
                 }
                 onClick={() =>
                   filterEvents(filter.name === f.name ? newestFilter : f)
@@ -46,7 +46,9 @@ export default function Botbar({
             <button
               className={
                 "inline-flex flex-col items-center justify-center px-3 py-3 my-1 h-8 rounded-full " +
-                (tagsOpen || filteredTags.length > 0 ? "bg-white" : "")
+                (tagsOpen || filteredTags.length > 0
+                  ? "bg-white"
+                  : "active:bg-white")
               }
               onClick={() => {
                 setTagsOpen(!tagsOpen);
@@ -67,7 +69,7 @@ export default function Botbar({
                 {tags.map((t, i) => (
                   <Tag
                     key={i}
-                    className="block w-32 "
+                    className="block w-32"
                     selected={filteredTags.includes(t.id)}
                     tag={t}
                     onClick={() => {
@@ -85,7 +87,7 @@ export default function Botbar({
             </div>
           )}
           <PlusCircleIcon
-            className="w-14 h-14 text-black cursor-pointer"
+            className="w-14 h-14 text-gray-500 cursor-pointer hover:text-black active:text-black"
             onClick={openModal}
           />
         </div>

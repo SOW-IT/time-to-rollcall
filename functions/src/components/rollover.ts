@@ -2,7 +2,7 @@ import { db } from "../config/firebase";
 import { onSchedule } from "firebase-functions/scheduler";
 
 export const rolloverUsers = onSchedule(
-  { timeZone: "Australia/Sydney", schedule: "0 0 1 1 *", timeoutSeconds: 120, region: "australia-southeast1" },
+  { timeZone: "Australia/Sydney", schedule: "0 0 10 1 *", timeoutSeconds: 120, region: "australia-southeast1" },
   async () => {
     const currentYear = new Date().getFullYear();
     const lastYear = currentYear - 1;

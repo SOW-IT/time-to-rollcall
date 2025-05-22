@@ -3,14 +3,18 @@ import { hoursAndMinutes, inBetween, sameDay, toddMMYYYY } from "@/helper/Time";
 import LiveBadge from "./LiveBadge";
 import Tag from "./Tag";
 import { useState, useEffect } from "react";
+import { University } from "@/models/University";
+import GroupBadge from "./GroupBadge";
 
 export default function EventComponent({
   event,
+  collabUnis,
   openModal,
   disabled,
   showButton,
 }: {
   event: EventModel;
+  collabUnis?: University[];
   openModal?: () => void;
   disabled?: boolean;
   showButton?: boolean;
@@ -46,6 +50,13 @@ export default function EventComponent({
           {after && <p className="text-xs font-medium text-gray-600">ENDED</p>}
         </div>
       </div>
+      {collabUnis && (
+        <div className="flex mt-3">
+          {collabUnis.map((cu, i) => (
+            <GroupBadge key={i} className="px-4 mr-2" campus={cu} />
+          ))}
+        </div>
+      )}
       <div className="pt-3 pb-6">
         <div className="flex flex-wrap justify-start mb-3">
           {event.tags?.map((t, i) => (
@@ -76,21 +87,23 @@ export default function EventComponent({
               ATTENDANCE: {event.members?.length ?? 0}
             </p>
           )}
-          <button
-            disabled={disabled}
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              openModal?.();
-            }}
-            className={`rounded-3xl text-sm p-1 px-3 bg-white border-2 active:bg-gray-200 ${
-              before
-                ? "border-gray-400 text-gray-400"
-                : "border-gray-600 text-gray-600"
-            }`}
-          >
-            Edit
-          </button>
+          {!disabled && (
+            <button
+              disabled={disabled}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openModal?.();
+              }}
+              className={`rounded-3xl text-sm p-1 px-3 bg-white border-2 hover:bg-gray-200 active:bg-gray-200 ${
+                before
+                  ? "border-gray-400 text-gray-400"
+                  : "border-gray-600 text-gray-600"
+              }`}
+            >
+              Edit
+            </button>
+          )}
         </div>
       )}
     </>

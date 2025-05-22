@@ -6,7 +6,7 @@ import AttendanceSignedIn from "@/components/event/AttendanceSignedIn";
 import AttendanceSuggested from "@/components/event/AttendanceSuggested";
 import LiveBadge from "@/components/event/LiveBadge";
 import EditMember from "@/components/members/EditMember";
-import { inBetween } from "@/helper/Time";
+import { currentYearStr, inBetween } from "@/helper/Time";
 import { promiseToast } from "@/helper/Toast";
 import {
   EventContext,
@@ -19,12 +19,15 @@ import {
   removeMemberFromEvent,
   updateEventMembers,
 } from "@/lib/events";
+import { firestore } from "@/lib/firebase";
 import { createMember, deleteMember, updateMember } from "@/lib/members";
 import { EventId, MemberInformation } from "@/models/Event";
 import { GroupId } from "@/models/Group";
 import { InitMember, MemberModel } from "@/models/Member";
 import { MetadataSelectModel } from "@/models/Metadata";
+import { universityIds } from "@/models/University";
 import { useGSAP } from "@gsap/react";
+import { doc } from "firebase/firestore";
 import gsap from "gsap";
 import Draggable from "gsap/dist/Draggable";
 import { useContext, useEffect, useState } from "react";
@@ -34,6 +37,8 @@ import {
 } from "services/attendanceService";
 
 gsap.registerPlugin(Draggable, useGSAP);
+
+const MAX_INDEX = 10;
 
 export default function Event({
   params,
@@ -87,22 +92,58 @@ export default function Event({
     setIsOpen(true);
   }
 
+  const campus = metadata?.find(
+    (m) => m.key === "Campus" && m.type === "select"
+  ) as MetadataSelectModel | undefined;
+
   async function editMember() {
     setUpdating(true);
     if (selectedMemberInfo.member.id === "placeholder") {
       const newMember = await createMember(
-        params.groupId,
+        campus && selectedMemberInfo.member.metadata
+          ? universityIds[
+              campus.values[selectedMemberInfo.member.metadata[campus.id]]
+            ] ?? params.groupId
+          : params.groupId,
         selectedMemberInfo.member
       );
       await promiseToast<void>(
-        addMemberToEvent(params.groupId, params.eventId, newMember.id),
+        addMemberToEvent(
+          groupId,
+          eventId,
+          doc(
+            firestore,
+            "groups",
+            campus && selectedMemberInfo.member.metadata
+              ? universityIds[
+                  campus.values[selectedMemberInfo.member.metadata[campus.id]]
+                ] ?? params.groupId
+              : params.groupId,
+            "members",
+            currentYearStr,
+            "members",
+            newMember.id
+          )
+        ),
         "Creating and Adding Member...",
         "Member Created and Added!",
         "Could not create and added member."
       );
     } else {
       await promiseToast<void>(
-        updateMember(params.groupId, selectedMemberInfo.member),
+        updateMember(
+          selectedMemberInfo.member.docRef ??
+            doc(
+              firestore,
+              "groups",
+              params.groupId,
+              "members",
+              currentYearStr,
+              "members",
+              selectedMemberInfo.member.id
+            ),
+          selectedMemberInfo.member
+        ),
         "Updating Member...",
         "Member Updated!",
         "Could not update member."
@@ -116,7 +157,7 @@ export default function Event({
         );
         if (index !== -1) {
           await promiseToast<void>(
-            updateEventMembers(params.groupId, event.id, [
+            updateEventMembers(groupId, eventId, [
               ...event.members.slice(0, index),
               selectedMemberInfo,
               ...event.members.slice(index + 1),
@@ -157,7 +198,7 @@ export default function Event({
           searchInput
         );
         setMembersNotSignedIn(suggested.concat(notSuggested));
-        setIndex(suggested.length);
+        setIndex(Math.min(MAX_INDEX, suggested.length));
         const { suggested: signedIn, notSuggested: signedInNotSuggested } =
           searchForMemberInformationByName(membersSignedIn, searchInput);
         setMembersSignedIn(signedIn.concat(signedInNotSuggested));
@@ -177,33 +218,29 @@ export default function Event({
   }, [members, event]);
 
   useEffect(() => {
-    let prevSearchActive = searchActive;
-    setSearchActive(searchInput.length > 0);
-    if (searchInput.length > 0) {
-      setLoadAnimation(false);
-      const { suggested, notSuggested } = searchForMemberByName(
-        membersNotSignedIn,
-        searchInput
-      );
-      setMembersNotSignedIn(suggested.concat(notSuggested));
-      setIndex(suggested.length);
-      const { suggested: signedIn, notSuggested: signedInNotSuggested } =
-        searchForMemberInformationByName(membersSignedIn, searchInput);
-      setMembersSignedIn(signedIn.concat(signedInNotSuggested));
-      setIndexSignedIn(signedIn.length);
-    } else if (prevSearchActive && searchInput.length === 0) {
-      setIndex(0);
-      setIndexSignedIn(membersSignedIn.length);
-    }
+    const delayDebounceFn = setTimeout(() => {
+      let prevSearchActive = searchActive;
+      setSearchActive(searchInput.length > 0);
+      if (searchInput.length > 0) {
+        setLoadAnimation(false);
+        const { suggested, notSuggested } = searchForMemberByName(
+          membersNotSignedIn,
+          searchInput
+        );
+        setMembersNotSignedIn(suggested.concat(notSuggested));
+        setIndex(Math.min(MAX_INDEX, suggested.length));
+        const { suggested: signedIn, notSuggested: signedInNotSuggested } =
+          searchForMemberInformationByName(membersSignedIn, searchInput);
+        setMembersSignedIn(signedIn.concat(signedInNotSuggested));
+        setIndexSignedIn(signedIn.length);
+      } else if (prevSearchActive && searchInput.length === 0) {
+        setIndex(0);
+        setIndexSignedIn(membersSignedIn.length);
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
     // eslint-disable-next-line
   }, [searchInput]);
-
-  useEffect(() => {
-    if (searchInput.length === 0) {
-      setLoadAnimation(true);
-    }
-    // eslint-disable-next-line
-  }, [membersNotSignedIn]);
 
   async function deleteMemberIn() {
     setUpdatingDelete(true);
@@ -227,7 +264,14 @@ export default function Event({
         );
       }
       await promiseToast<void>(
-        deleteMember(params.groupId, selectedMemberInfo.member.id),
+        deleteMember(
+          campus && selectedMemberInfo.member.metadata
+            ? universityIds[
+                campus.values[selectedMemberInfo.member.metadata[campus.id]]
+              ] ?? params.groupId
+            : params.groupId,
+          selectedMemberInfo.member.id
+        ),
         "Deleting Member...",
         "Member Deleted!",
         "Could not delete member."
@@ -338,7 +382,26 @@ export default function Event({
                 action={(memberInfo: MemberInformation) => {
                   const { member } = memberInfo;
                   promiseToast<void>(
-                    addMemberToEvent(groupId, eventId, member.id),
+                    addMemberToEvent(
+                      groupId,
+                      eventId,
+                      member.docRef ??
+                        doc(
+                          firestore,
+                          "groups",
+                          campus && selectedMemberInfo.member.metadata
+                            ? universityIds[
+                                campus.values[
+                                  selectedMemberInfo.member.metadata[campus.id]
+                                ]
+                              ] ?? params.groupId
+                            : params.groupId,
+                          "members",
+                          currentYearStr,
+                          "members",
+                          member.id
+                        )
+                    ),
                     `Adding ${member.name}...`,
                     `${member.name} Added!`,
                     `Could not add ${member.name}.`
@@ -387,7 +450,12 @@ export default function Event({
           <div className="flex flex-col fixed z-40 bottom-0 w-full">
             <button
               type="button"
-              className="text-gray-700 text-sm py-4 px-1.5 w-full font-light text-center bg-green-200"
+              disabled={params.year !== currentYearStr}
+              className={`text-gray-700 text-sm py-4 px-1.5 w-full font-light text-center disabled:cursor-not-allowed ${
+                params.year === currentYearStr
+                  ? "bg-green-200 active:bg-green-300"
+                  : "bg-gray-200"
+              }`}
               onClick={() => {
                 if (toggleEdit) {
                   setSelectedMemberInfo({

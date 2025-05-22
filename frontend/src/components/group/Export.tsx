@@ -11,7 +11,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Fragment, useContext, useEffect, useState } from "react";
 import Tag from "../event/Tag";
 import Loader from "../Loader";
-import { MetadataContext } from "@/lib/context";
+import { EventsContext, MetadataContext } from "@/lib/context";
 import { promiseToast } from "@/helper/Toast";
 import { MetadataInputModel, MetadataSelectModel } from "@/models/Metadata";
 import { GroupId } from "@/models/Group";
@@ -27,6 +27,7 @@ export default function Export({
   closeModal: () => void;
   tags?: TagModel[];
 }) {
+  const events = useContext(EventsContext);
   const metadata = useContext(MetadataContext);
   const [exportTags, setExportTags] = useState<TagModel[]>([]);
   const [exportMetadata, setExportMetadata] = useState<
@@ -72,7 +73,7 @@ export default function Export({
                   className="absolute right-2 top-2 p-2 cursor-pointer"
                   onClick={closeModal}
                 >
-                  <XMarkIcon className="w-6 h-6 text-black" />
+                  <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black active:text-black" />
                 </div>
                 <DialogTitle
                   as="h3"
@@ -212,20 +213,21 @@ export default function Export({
                   </div>
                 </div>
                 {updating ? (
-                  <div className="bottom-2 w-full fixed flex justify-center items-center">
+                  <div className="flex justify-center bottom-2 w-full absolute z-50">
                     <Loader show />
                   </div>
                 ) : (
-                  <div className="flex justify-center w-full bottom-2 fixed z-50 ">
+                  <div className="flex justify-center bottom-2 w-full absolute z-50">
                     <button
                       type="button"
-                      className="mt-4 rounded-3xl border border-transparent bg-black px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="mt-4 rounded-3xl border border-transparent bg-gray-800 hover:bg-black active:bg-black px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={async () => {
-                        if (exportMetadata !== null) {
+                        if (events && exportMetadata !== null) {
                           setUpdating(true);
                           await promiseToast<void>(
                             downloadEventsToExcel(
                               groupId,
+                              events,
                               exportTags,
                               exportMetadata
                             ),

@@ -130,14 +130,14 @@ export default function EditMember({
                     className="absolute right-2 top-2 p-2 cursor-pointer"
                     onClick={closeModal}
                   >
-                    <XMarkIcon className="w-6 h-6 text-black" />
+                    <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black active:text-black" />
                   </div>
                   {!newMember && (
                     <div
                       className="absolute left-2 top-2 p-2 cursor-pointer"
                       onClick={openDeleteConfirmationModal}
                     >
-                      <TrashIcon className="w-6 h-6 text-red-600" />
+                      <TrashIcon className="w-6 h-6 text-red-600 hover:text-red-800 active:text-red-800" />
                     </div>
                   )}
                   <DialogTitle
@@ -150,8 +150,13 @@ export default function EditMember({
                     <div className="my-4">
                       <p className="text-sm text-gray-900">
                         Name
-                        {newMember &&
-                          members?.find((m) => m.name === member.name) && (
+                        {!updating &&
+                          newMember &&
+                          members?.some(
+                            (m) =>
+                              m.name.toLowerCase().trim() ===
+                              member.name.toLowerCase().trim()
+                          ) && (
                             <span className="ml-2 text-orange-400 text-xs">
                               Member with this name already exists!
                             </span>
@@ -199,15 +204,19 @@ export default function EditMember({
                             <div className="mx-auto w-full">
                               <Listbox
                                 value={member.metadata?.[m.id] ?? ""}
-                                onChange={(value) =>
+                                onChange={(value) => {
+                                  const newValue =
+                                    value === member.metadata?.[m.id]
+                                      ? ""
+                                      : value;
                                   setMember({
                                     ...member,
                                     metadata: {
                                       ...member.metadata,
-                                      [m.id]: value,
+                                      [m.id]: newValue,
                                     },
-                                  })
-                                }
+                                  });
+                                }}
                               >
                                 <div className="flex justify-between items-center">
                                   {member.metadata?.[m.id] ? (
@@ -255,13 +264,13 @@ export default function EditMember({
                                               },
                                             })
                                           }
-                                          className="group flex justify-between cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[focus]:bg-white/10"
+                                          className="group flex justify-between cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[selected]:bg-gray-200 data-[focus]:bg-gray-200"
                                         >
                                           <div className="text-lg font-semibold">
                                             {vValue}
                                           </div>
                                           <CheckIcon
-                                            className="invisible size-4 fill-white group-data-[selected]:visible right-4 w-5 h-5 text-black"
+                                            className="invisible size-4 group-data-[selected]:visible right-4 w-5 h-5 text-black"
                                             aria-hidden="true"
                                           />
                                         </ListboxOption>
@@ -277,7 +286,7 @@ export default function EditMember({
                       <input
                         type="text"
                         autoFocus
-                        className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0"
+                        className="w-full rounded-none resize-none border-t-0 bg-transparent font-sans text-lg font-semibold text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border-blue-gray-200 focus:border-gray-900 focus:border-t-0 focus:outline-0 hover:bg-gray-200 active:bg-gray-200"
                         placeholder="example@email.com"
                         value={member.email ?? ""}
                         onChange={(e) =>
@@ -299,17 +308,24 @@ export default function EditMember({
                     )}
                   </div>
                   {updating ? (
-                    <div className="bottom-2 w-full fixed flex justify-center items-center">
+                    <div className="bottom-2 absolute w-full flex justify-center items-center">
                       <Loader show />
                     </div>
                   ) : (
-                    <div className="flex justify-center w-full bottom-2 fixed z-50 ">
+                    <div className="flex justify-center bottom-2 w-full absolute z-50">
                       <button
                         type="button"
                         disabled={!member.name}
                         className="mt-4 rounded-3xl border border-transparent bg-black px-4 py-2 text-sm font-medium text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={() =>
-                          newMember ? openConfirmationModal() : submit()
+                          newMember &&
+                          members?.some(
+                            (m) =>
+                              m.name.toLowerCase().trim() ===
+                              member.name.toLowerCase().trim()
+                          )
+                            ? openConfirmationModal()
+                            : submit()
                         }
                       >
                         {newMember ? "Create" : "Update"}

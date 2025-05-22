@@ -5,7 +5,7 @@ import { Path } from "@/helper/Path";
 import { allowedYears, currentYearStr } from "@/helper/Time";
 import { EventsContext, TagsContext } from "@/lib/context";
 import { GroupId } from "@/models/Group";
-import { TagId, TagModel } from "@/models/Tag";
+import { TagModel } from "@/models/Tag";
 import {
   Listbox,
   ListboxButton,
@@ -36,9 +36,9 @@ export default function Metrics({
   const events = useContext(EventsContext);
   const tags = useContext(TagsContext);
   const [metricByTag, setMetricByTag] = useState<{
-    [tagId: TagId]: {
+    [tagName: string]: {
       attendance: { name: string; Attendance: number }[];
-      average?: { name: string; Average: number; colour?: string };
+      average?: { name: string; Average: string; colour?: string };
     };
   }>({});
   const [maxNumber, setMaxNumber] = useState(0);
@@ -47,24 +47,23 @@ export default function Metrics({
     if (tags && events) {
       let maxNumber = 0;
       let eventsByTag: {
-        [tagId: TagId]: {
+        [tagName: string]: {
           attendance: { name: string; Attendance: number }[];
-          average?: { name: string; Average: number; colour?: string };
+          average?: { name: string; Average: string; colour?: string };
         };
       } = {};
       for (const tag of tags) {
-        eventsByTag[tag.id] = { attendance: [] };
+        eventsByTag[tag.name] = { attendance: [] };
       }
       for (const event of events) {
-        const eventTags = event.tags.map((t) => t.id);
         const attendanceNumbers = event.members?.length ?? 0;
         if (maxNumber < attendanceNumbers) {
           maxNumber = attendanceNumbers;
         }
 
-        for (const tagId of eventTags) {
-          if (eventsByTag[tagId]) {
-            eventsByTag[tagId].attendance.unshift({
+        for (const tag of event.tags) {
+          if (eventsByTag[tag.name]) {
+            eventsByTag[tag.name].attendance.unshift({
               name: event.name,
               Attendance: attendanceNumbers,
             });
@@ -72,15 +71,16 @@ export default function Metrics({
         }
       }
       for (const tag of tags) {
-        eventsByTag[tag.id].average = {
+        eventsByTag[tag.name].average = {
           name: tag.name,
           colour: tag.colour,
-          Average:
-            eventsByTag[tag.id].attendance.reduce(
+          Average: Number(
+            eventsByTag[tag.name].attendance.reduce(
               (accumulator, currentValue) =>
                 accumulator + currentValue.Attendance,
               0
-            ) / eventsByTag[tag.id].attendance.length,
+            ) / eventsByTag[tag.name].attendance.length
+          ).toFixed(2),
         };
       }
       setMetricByTag(eventsByTag);
@@ -105,7 +105,9 @@ export default function Metrics({
             <Listbox
               value={params.year}
               onChange={(value) =>
-                router.push(Path.Group + "/" + params.groupId + "/" + value)
+                router.push(
+                  Path.Group + "/" + params.groupId + "/" + value + "/metrics"
+                )
               }
             >
               <div className="flex justify-between">
@@ -113,9 +115,7 @@ export default function Metrics({
                   disabled={years.length === 0}
                   className="flex justify-between items-center appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-600"
                 >
-                  {params.year === currentYearStr
-                    ? "Previous Years"
-                    : "View Years"}
+                  {params.year === currentYearStr ? "Past Years" : "View Years"}
                   <ChevronDownIcon
                     className="pointer-events-none w-6 h-6 text-gray-600"
                     aria-hidden="true"
@@ -125,7 +125,7 @@ export default function Metrics({
               <ListboxOptions
                 anchor="bottom"
                 transition
-                className="rounded-xl border border-white/5 bg-gray-100 p-1 focus:outline-none transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0"
+                className="rounded-xl border border-white/5 bg-gray-100 p-1 focus:outline-none transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0 data-[selected]:bg-gray-200 data-[focus]:bg-gray-200"
               >
                 {years.map((year, j) => (
                   <ListboxOption
@@ -135,7 +135,7 @@ export default function Metrics({
                   >
                     <div className="text-lg font-semibold">{year}</div>
                     <CheckIcon
-                      className="invisible size-4 fill-white group-data-[selected]:visible right-4 w-5 h-5 text-black"
+                      className="invisible size-4 group-data-[selected]:visible right-4 w-5 h-5 text-black"
                       aria-hidden="true"
                     />
                   </ListboxOption>
@@ -167,8 +167,8 @@ export default function Metrics({
             </BarChart>
           </ResponsiveContainer>
         </div>
-        {Object.entries(metricByTag).map(([tId, m], i) => {
-          const tag = tags?.find((t) => t.id === tId) as TagModel;
+        {Object.entries(metricByTag).map(([tName, m], i) => {
+          const tag = tags?.find((t) => t.name === tName) as TagModel;
           return (
             <div key={i}>
               <Tag tag={tag} disabled />

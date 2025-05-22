@@ -264,7 +264,7 @@ export default function Topbar({
                   ? Path.Group
                   : Path.Group + "/" + group.id + "/" + year
               }
-              className="bg-gray-900 rounded-full py-1 px-4 text-white font-light text-center"
+              className="bg-gray-500 rounded-full py-1 px-4 text-white font-light text-center hover:bg-black active:bg-black"
             >
               {group.name}
             </Link>
@@ -276,13 +276,16 @@ export default function Topbar({
         )}
         {year && disabled && (
           <button
-            className="rounded-lg bg-gray-200 p-1 px-2 font-bold"
+            className="rounded-lg bg-gray-200 p-1 px-2 font-bold hover:bg-gray-400 active:bg-gray-400"
             onClick={() =>
               router.push(`${Path.Group}/${group?.id}/${currentYearStr}`)
             }
           >
-            Previous Year: {year}
+            {year}
           </button>
+        )}
+        {year !== currentYearStr && !disabled && (
+          <p className="rounded-lg bg-gray-200 p-1 px-2 font-bold">{year}</p>
         )}
         {event ? (
           <div className="flex items-center gap-4 justify-end">
@@ -292,19 +295,19 @@ export default function Topbar({
               closeModal={closeExportModal}
             />
             <ArrowDownTrayIcon
-              className="cursor-pointer w-7 h-7 text-gray-500"
+              className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
               onClick={openExportModal}
             />
             {!disabled && setToggleEdit && (
               <>
                 {toggleEdit ? (
                   <PencilIconSolid
-                    className="cursor-pointer w-7 h-7 text-gray-500"
+                    className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                     onClick={() => !disabled && setToggleEdit(!toggleEdit)}
                   />
                 ) : (
                   <PencilIcon
-                    className="cursor-pointer w-7 h-7 text-gray-500"
+                    className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                     onClick={() => !disabled && setToggleEdit(!toggleEdit)}
                   />
                 )}
@@ -312,7 +315,7 @@ export default function Topbar({
             )}
             {!disabled && (
               <Cog6ToothIcon
-                className="cursor-pointer w-7 h-7 text-gray-500"
+                className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={openModal}
               />
             )}
@@ -322,14 +325,14 @@ export default function Topbar({
             {pathname ===
             Path.Group + "/" + group.id + "/" + year + GroupPath.Metrics ? (
               <PresentationChartLineIconSolid
-                className="cursor-pointer w-7 h-7 text-gray-500"
+                className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={() =>
                   router.push(Path.Group + "/" + group.id + "/" + year)
                 }
               />
             ) : (
               <PresentationChartLineIcon
-                className="cursor-pointer w-7 h-7 text-gray-500"
+                className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={() =>
                   router.push(
                     Path.Group + "/" + group.id + "/" + year + GroupPath.Metrics
@@ -340,14 +343,14 @@ export default function Topbar({
             {pathname ===
             Path.Group + "/" + group.id + "/" + year + GroupPath.Members ? (
               <UserGroupIconSolid
-                className="cursor-pointer w-7 h-7 text-gray-500"
+                className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={() =>
                   router.push(Path.Group + "/" + group.id + "/" + year)
                 }
               />
             ) : (
               <UserGroupIcon
-                className="cursor-pointer w-7 h-7 text-gray-500"
+                className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={() =>
                   router.push(
                     Path.Group + "/" + group.id + "/" + year + GroupPath.Members
@@ -357,7 +360,7 @@ export default function Topbar({
             )}
             {!disabled && (
               <Cog6ToothIcon
-                className="cursor-pointer w-7 h-7 text-gray-500"
+                className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={
                   pathname ===
                   Path.Group + "/" + group.id + "/" + year + GroupPath.Members
@@ -378,7 +381,7 @@ export default function Topbar({
               updating={false}
             />
             <ArrowLeftEndOnRectangleIcon
-              className="cursor-pointer w-7 h-7 text-gray-500"
+              className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
               onClick={() => setLogoutConfirmationIsOpen(true)}
             />
           </div>

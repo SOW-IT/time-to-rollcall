@@ -14,6 +14,7 @@ import { deleteEvent, submitEvent, updateEvent } from "@/lib/events";
 import { EventModel, InitEvent } from "@/models/Event";
 import { GroupId } from "@/models/Group";
 import { TagId } from "@/models/Tag";
+import { universityColours, universityNames } from "@/models/University";
 import {
   Listbox,
   ListboxButton,
@@ -132,7 +133,13 @@ export default function Group({
   useEffect(() => {
     if (group && events) {
       setSubmitEventForm(InitEvent(group?.name));
-      setShowedEvents(events);
+      setShowedEvents(
+        events.sort(
+          (a, b) =>
+            (b.dateEnd ? b.dateEnd : b.dateStart).valueOf() -
+            (a.dateEnd ? a.dateEnd : a.dateStart).valueOf()
+        )
+      );
       setLoading(false);
     }
   }, [group, events, params.groupId]);
@@ -141,6 +148,13 @@ export default function Group({
     params.year === currentYearStr
       ? allowedYears().slice(0, -1)
       : allowedYears();
+
+  const hexToRgb = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `${r}, ${g}, ${b}`;
+  };
 
   const disabled = currentYearStr !== params.year;
   return (
@@ -184,7 +198,7 @@ export default function Group({
             <button
               type="button"
               onClick={openExportModal}
-              className="flex justify-end gap-2 items-center text-center text-gray-700 text-sm rounded-lg py-2 px-2 bg-gray-200"
+              className="flex justify-end gap-2 items-center text-center text-gray-700 hover:text-black active:text-black text-sm rounded-lg py-2 px-2 bg-gray-200"
             >
               <ArrowDownTrayIcon className="cursor-pointer w-6 h-6 text-gray-500" />
               <p>EXPORT MULTIPLE</p>
@@ -200,11 +214,9 @@ export default function Group({
               <div className="flex justify-between">
                 <ListboxButton
                   disabled={years.length === 0}
-                  className="flex justify-between items-center appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-600"
+                  className="flex justify-between items-center appearance-none rounded-lg bg-white/5 text-left text-lg font-semibold focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25 text-gray-600 hover:text-black active:text-black"
                 >
-                  {params.year === currentYearStr
-                    ? "Previous Years"
-                    : "View Years"}
+                  {params.year === currentYearStr ? "Past Years" : "View Years"}
                   <ChevronDownIcon
                     className="pointer-events-none w-6 h-6 text-gray-600"
                     aria-hidden="true"
@@ -220,11 +232,11 @@ export default function Group({
                   <ListboxOption
                     key={j}
                     value={year}
-                    className="group flex justify-between cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 select-none data-[focus]:bg-white/10"
+                    className="group flex justify-between cursor-pointer items-center gap-2 rounded-lg py-1.5 px-3 select-none"
                   >
                     <div className="text-lg font-semibold">{year}</div>
                     <CheckIcon
-                      className="invisible size-4 fill-white group-data-[selected]:visible right-4 w-5 h-5 text-black"
+                      className="invisible size-4 group-data-[selected]:visible right-4 w-5 h-5 text-black"
                       aria-hidden="true"
                     />
                   </ListboxOption>
@@ -234,20 +246,49 @@ export default function Group({
           </div>
           {group &&
             showedEvents.map((event, i) => (
-              <div key={i}>
+              <div
+                key={i}
+                style={{
+                  backgroundColor: event.groupId
+                    ? `rgba(${hexToRgb(
+                        universityColours[universityNames[event.groupId]]
+                      )}, 0.2)` // 0.3 for light opacity
+                    : "",
+                }}
+              >
                 <hr className="h-[1px] border-t-0 bg-neutral-300" />
                 <div
-                  className="cursor-pointer px-4 py-6 hover:bg-gray-100"
+                  className="cursor-pointer px-4 py-6"
                   onClick={() =>
                     router.push(
-                      `${Path.Group}/${group.id}/${params.year}/event/${event.id}`
+                      `${Path.Group}/${event.groupId ?? group.id}/${
+                        params.year
+                      }/event/${event.id}${
+                        event.groupId ? "?fromGroupId=" + group.id : ""
+                      }`
                     )
                   }
                 >
                   <EventComponent
+                    collabUnis={(event.groupId
+                      ? [universityNames[event.groupId]]
+                      : []
+                    )
+                      .concat(
+                        event.collaboration
+                          ? event.collaboration.map(
+                              (gId) => universityNames[gId]
+                            )
+                          : []
+                      )
+                      .filter((g) => g !== universityNames[params.groupId])}
                     event={event}
                     showButton
-                    disabled={disabled}
+                    disabled={
+                      disabled || event.groupId
+                        ? event.groupId !== group.id
+                        : false
+                    }
                     openModal={() => {
                       setSubmitEventForm(event);
                       openModal();

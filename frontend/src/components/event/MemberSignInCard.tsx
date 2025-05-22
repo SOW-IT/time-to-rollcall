@@ -4,6 +4,8 @@ import { useGSAP } from "@gsap/react";
 import {
   ArrowRightIcon,
   ArrowUturnLeftIcon,
+  FireIcon,
+  SparklesIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import gsap from "gsap";
@@ -13,10 +15,15 @@ import { FC, memo, useContext, useEffect, useRef } from "react";
 import WOMAN_FACE_SVG from "../../../public/face-woman-profile.svg";
 import MAN_SVG from "../../../public/man-profile.svg";
 import GroupBadge from "./GroupBadge";
-import { EventContext, EventsContext, MetadataContext } from "@/lib/context";
+import {
+  EventContext,
+  EventsContext,
+  GroupContext,
+  MetadataContext,
+} from "@/lib/context";
 import { MetadataSelectModel } from "@/models/Metadata";
 import useMediaQuery from "@/helper/useMediaQuery";
-import { EventModel, MemberInformation } from "@/models/Event";
+import { MemberInformation } from "@/models/Event";
 
 export const MemberSignIn: FC<MemberSignInCardProps> = memo(
   ({ ...props }) => {
@@ -59,6 +66,7 @@ function MemberSignInCard({
   refreshDependency,
   triggerAddAnimation,
 }: MemberSignInCardProps) {
+  const group = useContext(GroupContext);
   const event = useContext(EventContext);
   const events = useContext(EventsContext);
   const metadata = useContext(MetadataContext);
@@ -204,36 +212,32 @@ function MemberSignInCard({
     };
   }, [refreshDependency, disabled]);
 
-  function PastEvents() {
-    const pastEvents =
-      event &&
-      events &&
-      events
-        .filter((e) => e.dateStart < event.dateStart)
-        .filter((e) =>
-          event.tags?.every((t) => e.tags.map((t) => t.id).includes(t.id))
-        );
+  const pastEvents =
+    event &&
+    events &&
+    events
+      .filter((e) => e.dateStart < event.dateStart)
+      .filter((e) =>
+        event.tags?.every((t) => e.tags.map((t) => t.name).includes(t.name))
+      );
 
+  function PastEvents() {
     if (!pastEvents) return <></>;
 
-    // const grayEvents: EventModel[] = [];
-    // for (let i = 0; i < 5 - pastEvents.length; ++i) {
-    //   grayEvents.push({ id: "placeholder" } as EventModel);
-    // }
     return (
-      <div className="flex-row-reverse flex justify-evenly gap-1 p-2">
-        {pastEvents?.slice(-5).map((e, i) => (
-          <div key={i}>
-            {e.members?.find((m) => m.member.id === memberInfo.member.id) ? (
-              <div className="bg-green-400 p-2" />
-            ) : (
-              <div className="bg-gray-100 p-2" />
-            )}
-          </div>
-        ))}
-        {/* {grayEvents.map((e, i) => (
-          <div key={i} className="bg-gray-100 p-2" />
-        ))} */}
+      <div className="flex p-2">
+        {pastEvents
+          ?.slice(0, 5)
+          .reverse()
+          .map((e, i) => (
+            <div key={i} className="flex align-middle gap-1 m-1">
+              {e.members?.find((m) => m.member.id === memberInfo.member.id) ? (
+                <div className="bg-green-400 p-2" />
+              ) : (
+                <div className="bg-gray-100 p-2" />
+              )}
+            </div>
+          ))}
       </div>
     );
   }
@@ -280,7 +284,33 @@ function MemberSignInCard({
               }
             }}
           >
-            <div className="flex justify-between items-center">
+            <div className="relative flex justify-between items-center">
+              {campus &&
+              memberInfo.member.metadata?.[campus.id] &&
+              campus.values[memberInfo.member.metadata?.[campus.id]] ===
+                group?.name &&
+              role &&
+              (!memberInfo.member.metadata?.[role.id] ||
+                (memberInfo.member.metadata?.[role.id] &&
+                  role.values[memberInfo.member.metadata?.[role.id]] ===
+                    "Member")) &&
+              pastEvents &&
+              pastEvents?.filter((e) =>
+                e.members?.some((m) => m.member.id === memberInfo.member.id)
+              ).length < 3 ? (
+                <SparklesIcon className="absolute -top-1 -left-3 h-5 w-5 z-30 text-orange-300" />
+              ) : (
+                <></>
+              )}
+              {pastEvents &&
+                pastEvents.slice(0, 3).length === 3 &&
+                pastEvents
+                  .slice(0, 3)
+                  .every((e) =>
+                    e.members?.some((m) => m.member.id === memberInfo.member.id)
+                  ) && (
+                  <FireIcon className="absolute -top-1 -left-3 h-5 w-5 z-30 text-blue-600" />
+                )}
               <Image
                 src={
                   gender && memberInfo.member.metadata?.[gender.id]

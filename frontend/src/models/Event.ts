@@ -1,3 +1,4 @@
+import { GroupId } from "./Group";
 import { MemberModel } from "./Member";
 import { TagModel } from "./Tag";
 import { University } from "./University";
@@ -5,12 +6,14 @@ import { University } from "./University";
 export type EventId = string;
 
 export interface EventModel {
+  groupId?: GroupId;
   id: EventId;
   name: string;
   tags: TagModel[];
   dateStart: Date;
   dateEnd: Date;
   members?: MemberInformation[];
+  collaboration?: GroupId[];
 }
 
 export interface MemberInformation {

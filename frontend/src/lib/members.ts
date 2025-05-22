@@ -2,7 +2,14 @@ import { currentYearStr } from "@/helper/Time";
 import { convertToFirestore, firestore } from "@/lib/firebase";
 import { GroupId } from "@/models/Group";
 import { MemberId, MemberModel } from "@/models/Member";
-import { addDoc, collection, deleteDoc, doc, setDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  DocumentReference,
+  setDoc,
+} from "firebase/firestore";
 
 export async function createMember(groupId: GroupId, member: MemberModel) {
   const ref = await addDoc(
@@ -19,19 +26,11 @@ export async function createMember(groupId: GroupId, member: MemberModel) {
   return { ...member, id: ref.id } as MemberModel;
 }
 
-export async function updateMember(groupId: GroupId, member: MemberModel) {
-  await setDoc(
-    doc(
-      firestore,
-      "groups",
-      groupId,
-      "members",
-      currentYearStr,
-      "members",
-      member.id
-    ),
-    convertMemberToDocument(member)
-  );
+export async function updateMember(
+  docRef: DocumentReference,
+  member: MemberModel
+) {
+  await setDoc(docRef, convertMemberToDocument(member));
 }
 
 export async function deleteMember(groupId: GroupId, memberId: MemberId) {
