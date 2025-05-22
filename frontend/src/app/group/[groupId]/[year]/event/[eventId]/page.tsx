@@ -74,6 +74,9 @@ export default function Event({
   >(new Date());
   const [toggleEdit, setToggleEdit] = useState(true);
   const [time, setTime] = useState(new Date());
+  const dietaryRequirements = metadata?.find(
+    (m) => m.key === "Dietary Requirements" && m.type === "select"
+  ) as MetadataSelectModel | undefined;
 
   useEffect(() => {
     // Update the time every minute
@@ -433,6 +436,14 @@ export default function Event({
               <AttendanceSignedIn
                 disabled={!toggleEdit}
                 signedIn={membersSignedIn.slice(0, indexSignedIn)}
+                dietary={() =>
+                  dietaryRequirements &&
+                  setMembersSignedIn((msi) =>
+                    msi.sort((a, _) =>
+                      a.member.metadata?.[dietaryRequirements.id] ? -1 : 1
+                    )
+                  )
+                }
                 totalAttendance={event.members?.length ?? 0}
                 action={(memberInfo: MemberInformation) => {
                   const { member } = memberInfo;
