@@ -416,7 +416,7 @@ export default function GroupAdmin() {
             className="p-2 bg-slate-200"
             onClick={() => removeMembersFromEvent()}
           >
-            Remove Members that don't exist
+            Remove Members that do not exist
           </button>
         </div>
       </>
