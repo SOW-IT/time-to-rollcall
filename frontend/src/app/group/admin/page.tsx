@@ -5,6 +5,7 @@ import { UserContext } from "@/lib/context";
 import { firestore } from "@/lib/firebase";
 import { useGroupsListener, useMembersListener } from "@/lib/hooks";
 import { convertMemberIdToReference } from "@/lib/members";
+import { GroupId } from "@/models/Group";
 import {
   collection,
   deleteDoc,
@@ -64,11 +65,12 @@ export default function GroupAdmin() {
 
   const removeMembersFromEvent = async () => {
     groups?.map((g) => removeMembersFromEventGroup(g.id));
-  const universityIds = {
-    1: "ccSgQTXvLRnin0OjwvRM",
-    2: "CZHRnKJ8SDnfMIw64WJu",
-    3: "MUSmSaufEfgdJUX4Kx4G",
-    4: "wrsDV3XfwQB4RD7BxKD2",
+    const universityIds = {
+      1: "ccSgQTXvLRnin0OjwvRM",
+      2: "CZHRnKJ8SDnfMIw64WJu",
+      3: "MUSmSaufEfgdJUX4Kx4G",
+      4: "wrsDV3XfwQB4RD7BxKD2",
+    };
   };
 
   const replaceMember = (
@@ -125,7 +127,8 @@ export default function GroupAdmin() {
               "CZHRnKJ8SDnfMIw64WJu",
               "MUSmSaufEfgdJUX4Kx4G",
               "wrsDV3XfwQB4RD7BxKD2",
-            ]) {
+              "T4qzZ5X3pGqJgJ8CMOtk",
+            ] as GroupId[]) {
               const events = await getDocs(
                 collection(firestore, "groups", groupId, "events")
               );
@@ -385,14 +388,14 @@ export default function GroupAdmin() {
             onClick={() => move("T4qzZ5X3pGqJgJ8CMOtk", ["1", "2", "3", "4"])}
           >
             Move SOW
-          </button>
+          </button> */}
           <button
             type="button"
             className="p-2 bg-slate-200"
             onClick={() => combineSameName()}
           >
             Combine Same Name
-          </button> */}
+          </button>
           <button
             type="button"
             className="p-2 bg-slate-200"
