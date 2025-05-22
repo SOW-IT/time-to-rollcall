@@ -14,6 +14,11 @@ import Image from "next/image";
 import { FC, memo, useContext, useEffect, useRef } from "react";
 import WOMAN_FACE_SVG from "../../../public/face-woman-profile.svg";
 import MAN_SVG from "../../../public/man-profile.svg";
+import VEGETARIAN_PNG from "../../../public/vegetarian.png";
+import NUTS_PNG from "../../../public/nuts.png";
+import PESCATARIAN_PNG from "../../../public/pescatarian.png";
+import GLUTEN_FREE_PNG from "../../../public/gluten-free.png";
+import DAIRY_FREE_PNG from "../../../public/dairy-free.png";
 import GroupBadge from "./GroupBadge";
 import {
   EventContext,
@@ -72,6 +77,9 @@ function MemberSignInCard({
   const metadata = useContext(MetadataContext);
   const role = metadata?.find(
     (m) => m.key === "Role" && m.type === "select"
+  ) as MetadataSelectModel | undefined;
+  const dietaryRequirements = metadata?.find(
+    (m) => m.key === "Dietary Requirements" && m.type === "select"
   ) as MetadataSelectModel | undefined;
   const year = metadata?.find(
     (m) => m.key === "Year" && m.type === "select"
@@ -310,6 +318,61 @@ function MemberSignInCard({
                     e.members?.some((m) => m.member.id === memberInfo.member.id)
                   ) && (
                   <FireIcon className="absolute -top-1 -left-3 h-5 w-5 z-30 text-blue-600" />
+                )}
+              {dietaryRequirements &&
+                memberInfo.member.metadata?.[dietaryRequirements.id] &&
+                dietaryRequirements.values[
+                  memberInfo.member.metadata?.[dietaryRequirements.id]
+                ].includes("Vegetarian") && (
+                  <Image
+                    src={VEGETARIAN_PNG}
+                    alt="face"
+                    className="absolute -top-1 left-4 h-5 w-5 z-30"
+                  />
+                )}
+              {dietaryRequirements &&
+                memberInfo.member.metadata?.[dietaryRequirements.id] &&
+                dietaryRequirements.values[
+                  memberInfo.member.metadata?.[dietaryRequirements.id]
+                ].includes("Nuts") && (
+                  <Image
+                    src={NUTS_PNG}
+                    alt="face"
+                    className="absolute -top-1 left-4 h-5 w-5 z-30"
+                  />
+                )}
+              {dietaryRequirements &&
+                memberInfo.member.metadata?.[dietaryRequirements.id] &&
+                dietaryRequirements.values[
+                  memberInfo.member.metadata?.[dietaryRequirements.id]
+                ].includes("Gluten") && (
+                  <Image
+                    src={GLUTEN_FREE_PNG}
+                    alt="face"
+                    className="absolute -top-1 left-4 h-5 w-5 z-30"
+                  />
+                )}
+              {dietaryRequirements &&
+                memberInfo.member.metadata?.[dietaryRequirements.id] &&
+                dietaryRequirements.values[
+                  memberInfo.member.metadata?.[dietaryRequirements.id]
+                ].includes("Dairy") && (
+                  <Image
+                    src={DAIRY_FREE_PNG}
+                    alt="face"
+                    className="absolute -top-1 left-4 h-5 w-5 z-30"
+                  />
+                )}
+              {dietaryRequirements &&
+                memberInfo.member.metadata?.[dietaryRequirements.id] &&
+                dietaryRequirements.values[
+                  memberInfo.member.metadata?.[dietaryRequirements.id]
+                ].includes("Pescatarian") && (
+                  <Image
+                    src={PESCATARIAN_PNG}
+                    alt="face"
+                    className="absolute -top-1 left-4 h-5 w-5 z-30"
+                  />
                 )}
               <Image
                 src={
