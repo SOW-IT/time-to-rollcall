@@ -382,26 +382,34 @@ export default function Event({
                 action={(memberInfo: MemberInformation) => {
                   const { member } = memberInfo;
                   promiseToast<void>(
-                    addMemberToEvent(
-                      groupId,
-                      eventId,
-                      member.docRef ??
-                        doc(
-                          firestore,
-                          "groups",
-                          campus && selectedMemberInfo.member.metadata
-                            ? universityIds[
-                                campus.values[
-                                  selectedMemberInfo.member.metadata[campus.id]
-                                ]
-                              ] ?? params.groupId
-                            : params.groupId,
-                          "members",
-                          currentYearStr,
-                          "members",
-                          member.id
-                        )
-                    ),
+                    event.members?.some((m) => m.member.id === member.id)
+                      ? (() => {
+                          throw new Error(
+                            `${member.name} is already a member of the event.`
+                          );
+                        })()
+                      : addMemberToEvent(
+                          groupId,
+                          eventId,
+                          member.docRef ??
+                            doc(
+                              firestore,
+                              "groups",
+                              campus && selectedMemberInfo.member.metadata
+                                ? universityIds[
+                                    campus.values[
+                                      selectedMemberInfo.member.metadata[
+                                        campus.id
+                                      ]
+                                    ]
+                                  ] ?? params.groupId
+                                : params.groupId,
+                              "members",
+                              currentYearStr,
+                              "members",
+                              member.id
+                            )
+                        ),
                     `Adding ${member.name}...`,
                     `${member.name} Added!`,
                     `Could not add ${member.name}.`
