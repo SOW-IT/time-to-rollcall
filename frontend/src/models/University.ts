@@ -15,6 +15,7 @@ export const universityColours: Record<string, string> = {
   [University.MACQ]: "#F2C259",
   [University.ACU]: "#57427A",
   [University.WSU]: "#990033",
+  [University.SOW]: "#000000",
 };
 
 export function getUniversityKey(value?: string): string | undefined {
