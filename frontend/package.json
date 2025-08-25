@@ -13,6 +13,7 @@
     "@gsap/react": "^2.1.1",
     "@headlessui/react": "^2.1.10",
     "@heroicons/react": "^2.1.1",
+    "@tanstack/react-virtual": "^3.13.12",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "firebase": "^10.5.2",

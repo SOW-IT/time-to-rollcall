@@ -1,8 +1,8 @@
-import { useContext, useState } from "react";
+"use client";
+import { useRef } from "react";
 import { MemberSignIn } from "./MemberSignInCard";
 import { MemberInformation } from "@/models/Event";
-import { MetadataContext } from "@/lib/context";
-import { MetadataSelectModel } from "@/models/Metadata";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface AttendanceSignedInProps {
   disabled: boolean;
@@ -21,6 +21,17 @@ export default function AttendanceSignedIn({
   action,
   edit,
 }: AttendanceSignedInProps) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: signedIn?.length || 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 80, // Height of each member sign-in card
+    overscan: 10,
+  });
+
+  const items = virtualizer.getVirtualItems();
+
   return (
     <div className="mt-2 bg-white mb-12">
       <div className="flex items-center mx-4 mb-2 gap-2">
@@ -30,29 +41,72 @@ export default function AttendanceSignedIn({
         <p className="cursor-pointer" onClick={() => dietary()}>
           Dietary
         </p>
-        <div className="ml-auto py-1.5 px-1.5 rounded-lg bg-gray-200">
-          <p className="text-[10px] font-light">
-            ATTENDANCE: {totalAttendance}
-          </p>
+        <div className="ml-auto flex items-center gap-2">
+          {/* Performance indicator */}
+          {/* <div className="py-1 px-2 rounded-lg bg-blue-100">
+            <p className="text-[10px] font-light text-blue-600">
+              VIRTUAL: {items.length} of {signedIn?.length || 0}
+            </p>
+          </div> */}
+          <div className="py-1.5 px-1.5 rounded-lg bg-gray-200">
+            <p className="text-[10px] font-light">
+              ATTENDANCE: {totalAttendance}
+            </p>
+          </div>
         </div>
       </div>
-      {signedIn?.map((memberInfo) => {
-        return (
-          <MemberSignIn
-            disabled={disabled}
-            key={memberInfo.member.id}
-            memberInfo={memberInfo}
-            dragConfig={{
-              draggable: true,
-              dragType: "DELETE",
-              action,
-              edit,
-            }}
-            refreshDependency={signedIn}
-            triggerAddAnimation
-          />
-        );
-      })}
+
+      {/* Virtualized list container */}
+      <div
+        ref={parentRef}
+        className="h-[calc(100vh-265px)] overflow-auto"
+        style={{
+          contain: "strict",
+        }}
+      >
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {items.map((virtualRow) => {
+            const memberInfo = signedIn?.[virtualRow.index];
+            if (!memberInfo) return null;
+
+            return (
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <MemberSignIn
+                  disabled={disabled}
+                  key={memberInfo.member.id}
+                  memberInfo={memberInfo}
+                  dragConfig={{
+                    draggable: true,
+                    dragType: "DELETE",
+                    action,
+                    edit,
+                  }}
+                  refreshDependency={signedIn}
+                  triggerAddAnimation={false}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

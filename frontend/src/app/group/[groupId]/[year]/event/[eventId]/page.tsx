@@ -201,7 +201,7 @@ export default function Event({
           searchInput
         );
         setMembersNotSignedIn(suggested.concat(notSuggested));
-        setIndex(Math.min(MAX_INDEX, suggested.length));
+        setIndex(suggested.length);
         const { suggested: signedIn, notSuggested: signedInNotSuggested } =
           searchForMemberInformationByName(membersSignedIn, searchInput);
         setMembersSignedIn(signedIn.concat(signedInNotSuggested));
@@ -231,7 +231,7 @@ export default function Event({
           searchInput
         );
         setMembersNotSignedIn(suggested.concat(notSuggested));
-        setIndex(Math.min(MAX_INDEX, suggested.length));
+        setIndex(suggested.length);
         const { suggested: signedIn, notSuggested: signedInNotSuggested } =
           searchForMemberInformationByName(membersSignedIn, searchInput);
         setMembersSignedIn(signedIn.concat(signedInNotSuggested));
