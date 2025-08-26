@@ -4,6 +4,10 @@ import Topbar from "@/components/Topbar";
 import AttendanceSearchBar from "@/components/event/AttendanceSearchBar";
 import AttendanceSignedIn from "@/components/event/AttendanceSignedIn";
 import AttendanceSuggested from "@/components/event/AttendanceSuggested";
+import AttendanceFilterBar, {
+  FilterState,
+} from "@/components/event/AttendanceFilterBar";
+import AttendanceFilterDrawer from "@/components/event/AttendanceFilterDrawer";
 import LiveBadge from "@/components/event/LiveBadge";
 import EditMember from "@/components/members/EditMember";
 import { currentYearStr, inBetween } from "@/helper/Time";
@@ -30,11 +34,9 @@ import { useGSAP } from "@gsap/react";
 import { doc } from "firebase/firestore";
 import gsap from "gsap";
 import Draggable from "gsap/dist/Draggable";
-import { useContext, useEffect, useState } from "react";
-import {
-  searchForMemberByName,
-  searchForMemberInformationByName,
-} from "services/attendanceService";
+import { useContext, useEffect, useState, useMemo } from "react";
+
+import { FunnelIcon } from "@heroicons/react/24/outline";
 
 gsap.registerPlugin(Draggable, useGSAP);
 
@@ -59,8 +61,7 @@ export default function Event({
   const [membersSignedIn, setMembersSignedIn] = useState<MemberInformation[]>(
     []
   );
-  const [index, setIndex] = useState<number>(0);
-  const [indexSignedIn, setIndexSignedIn] = useState<number>(0);
+
   const [loadAnimation, setLoadAnimation] = useState<boolean>(true);
   const [isOpen, setIsOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
@@ -74,6 +75,19 @@ export default function Event({
   >(new Date());
   const [toggleEdit, setToggleEdit] = useState(true);
   const [time, setTime] = useState(new Date());
+
+  // Filter state management
+  const [filterState, setFilterState] = useState<FilterState>({
+    metadataFilters: {},
+    sortBy: "name",
+    sortDirection: "asc",
+    sortMetadataField: undefined,
+  });
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
+  // Search query state for debounced search input
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
   const dietaryRequirements = metadata?.find(
     (m) => m.key === "Dietary Requirements" && m.type === "select"
   ) as MetadataSelectModel | undefined;
@@ -98,6 +112,237 @@ export default function Event({
   const campus = metadata?.find(
     (m) => m.key === "Campus" && m.type === "select"
   ) as MetadataSelectModel | undefined;
+
+  const toggleFilterDrawer = () => {
+    setIsFilterDrawerOpen(!isFilterDrawerOpen);
+  };
+
+  // Filter change handlers
+  const handleFilterChange = (metadataId: string, value: string) => {
+    setFilterState((prev) => ({
+      ...prev,
+      metadataFilters: {
+        ...prev.metadataFilters,
+        [metadataId]: value,
+      },
+    }));
+  };
+
+  const handleSortChange = (
+    sortBy: "name" | "metadata" | "signInTime",
+    direction: "asc" | "desc",
+    metadataField?: string
+  ) => {
+    setFilterState((prev) => ({
+      ...prev,
+      sortBy,
+      sortDirection: direction,
+      sortMetadataField: metadataField,
+    }));
+  };
+
+  const handleClearAllFilters = () => {
+    setFilterState({
+      metadataFilters: {},
+      sortBy: "name",
+      sortDirection: "asc",
+      sortMetadataField: undefined,
+    });
+    setSearchQuery("");
+    setSearchInput("");
+  };
+
+  // Apply filters to data
+  const applyFilters = <
+    T extends { member?: { metadata?: any }; metadata?: any }
+  >(
+    data: T[]
+  ): T[] => {
+    if (!metadata || Object.keys(filterState.metadataFilters).length === 0) {
+      return data;
+    }
+
+    return data.filter((item) => {
+      const member = "member" in item && item.member ? item.member : item;
+
+      return Object.entries(filterState.metadataFilters).every(
+        ([metadataId, filterValue]) => {
+          if (filterValue === "All") return true;
+
+          const metadataField = metadata.find((m) => m.id === metadataId);
+          if (!metadataField || metadataField.type !== "select") return true;
+
+          const selectMetadata = metadataField as MetadataSelectModel;
+          const memberValue = member?.metadata?.[metadataId];
+          if (filterValue === "Unselected") {
+            return !memberValue;
+          }
+
+          // Find the metadata value by matching the display value
+          const metadataValueId = Object.entries(selectMetadata.values).find(
+            ([_, value]) => value === filterValue
+          )?.[0];
+          return memberValue === metadataValueId;
+        }
+      );
+    });
+  };
+
+  // Apply search filter by name for MemberModel[] (not signed in)
+  const applySearchFilter = (
+    data: MemberModel[],
+    query: string
+  ): MemberModel[] => {
+    if (!query || query.length === 0) return data;
+    return data.filter((member) =>
+      member.name.toLowerCase().includes(query.toLowerCase())
+    );
+  };
+
+  // Apply search filter by name for MemberInformation[] (signed in)
+  const applySearchFilterSignedIn = (
+    data: MemberInformation[],
+    query: string
+  ): MemberInformation[] => {
+    if (!query || query.length === 0) return data;
+    return data.filter((memberInfo) =>
+      memberInfo.member.name.toLowerCase().includes(query.toLowerCase())
+    );
+  };
+
+  // Apply sorting to filtered data
+  const applySorting = <
+    T extends {
+      member?: { name: string; metadata?: any };
+      name?: string;
+      signInTime?: Date;
+    }
+  >(
+    data: T[]
+  ): T[] => {
+    if (!data.length) return data;
+
+    const sortedData = [...data];
+
+    switch (filterState.sortBy) {
+      case "name":
+        sortedData.sort((a, b) => {
+          const nameA = (
+            "member" in a && a.member ? a.member.name : a.name || ""
+          ).toLowerCase();
+          const nameB = (
+            "member" in b && b.member ? b.member.name : b.name || ""
+          ).toLowerCase();
+          return filterState.sortDirection === "asc"
+            ? nameA.localeCompare(nameB)
+            : nameB.localeCompare(nameA);
+        });
+        break;
+
+      case "metadata":
+        if (filterState.sortMetadataField) {
+          const metadataField = metadata?.find(
+            (m) => m.key === filterState.sortMetadataField
+          );
+          if (metadataField && metadataField.type === "select") {
+            const selectMetadata = metadataField as MetadataSelectModel;
+            sortedData.sort((a, b) => {
+              const memberA = "member" in a && a.member ? a.member : a;
+              const memberB = "member" in b && b.member ? b.member : b;
+
+              if (!memberA || !memberB) return 0;
+
+              // Type assertion to ensure metadata property exists
+              const memberAMetadata = (memberA as any).metadata;
+              const memberBMetadata = (memberB as any).metadata;
+
+              const valueA = memberAMetadata?.[selectMetadata.id];
+              const valueB = memberBMetadata?.[selectMetadata.id];
+
+              const displayA = valueA
+                ? selectMetadata.values[valueA] || valueA
+                : "";
+              const displayB = valueB
+                ? selectMetadata.values[valueB] || valueB
+                : "";
+
+              return filterState.sortDirection === "asc"
+                ? displayA.localeCompare(displayB)
+                : displayB.localeCompare(displayA);
+            });
+          }
+        }
+        break;
+
+      case "signInTime":
+        sortedData.sort((a, b) => {
+          if (
+            !("signInTime" in a) ||
+            !("signInTime" in b) ||
+            !a.signInTime ||
+            !b.signInTime
+          )
+            return 0;
+
+          const timeA = a.signInTime.getTime();
+          const timeB = b.signInTime.getTime();
+
+          return filterState.sortDirection === "asc"
+            ? timeA - timeB
+            : timeB - timeA;
+        });
+        break;
+    }
+
+    return sortedData;
+  };
+
+  // Apply filters and sorting with useMemo for performance
+  const filteredAndSortedMembersNotSignedIn = useMemo(() => {
+    if (!membersNotSignedIn) return [];
+
+    // Step 1: Apply search filter
+    const searchFiltered = applySearchFilter(membersNotSignedIn, searchQuery);
+
+    // Step 2: Apply metadata filters
+    const metadataFiltered = applyFilters<MemberModel>(searchFiltered);
+
+    // Step 3: Apply sorting
+    return applySorting<MemberModel>(metadataFiltered);
+  }, [membersNotSignedIn, searchQuery, filterState, metadata]);
+
+  // Calculate index for not signed in members based on search results
+  const index = useMemo(() => {
+    if (!membersNotSignedIn) return 0;
+    const searchFiltered = applySearchFilter(membersNotSignedIn, searchQuery);
+    return searchFiltered.length;
+  }, [membersNotSignedIn, searchQuery]);
+
+  // Calculate index for signed in members based on search results
+  const indexSignedIn = useMemo(() => {
+    if (!membersSignedIn) return 0;
+    const searchFiltered = applySearchFilterSignedIn(
+      membersSignedIn,
+      searchQuery
+    );
+    return searchFiltered.length;
+  }, [membersSignedIn, searchQuery]);
+
+  const filteredAndSortedMembersSignedIn = useMemo(() => {
+    if (!membersSignedIn) return [];
+
+    // Step 1: Apply search filter
+    const searchFiltered = applySearchFilterSignedIn(
+      membersSignedIn,
+      searchQuery
+    );
+
+    // Step 2: Apply metadata filters
+    const metadataFiltered = applyFilters<MemberInformation>(searchFiltered);
+
+    // Step 3: Apply sorting
+    return applySorting<MemberInformation>(metadataFiltered);
+  }, [membersSignedIn, searchQuery, filterState, metadata]);
 
   async function editMember() {
     setUpdating(true);
@@ -194,23 +439,10 @@ export default function Event({
           }))
           .filter((mi) => mi.member !== undefined) as MemberInformation[]) ??
         [];
-      if (searchInput.length > 0) {
-        setLoadAnimation(true);
-        const { suggested, notSuggested } = searchForMemberByName(
-          membersNotSignedIn,
-          searchInput
-        );
-        setMembersNotSignedIn(suggested.concat(notSuggested));
-        setIndex(suggested.length);
-        const { suggested: signedIn, notSuggested: signedInNotSuggested } =
-          searchForMemberInformationByName(membersSignedIn, searchInput);
-        setMembersSignedIn(signedIn.concat(signedInNotSuggested));
-        setIndexSignedIn(signedIn.length);
-      } else {
-        setMembersNotSignedIn(membersNotSignedIn);
-        setMembersSignedIn(membersSignedIn);
-        setIndexSignedIn(membersSignedIn.length);
-      }
+
+      // Set the base data without search filtering
+      setMembersNotSignedIn(membersNotSignedIn);
+      setMembersSignedIn(membersSignedIn);
 
       if (loading) {
         setLoading(false);
@@ -225,20 +457,9 @@ export default function Event({
       let prevSearchActive = searchActive;
       setSearchActive(searchInput.length > 0);
       if (searchInput.length > 0) {
-        setLoadAnimation(false);
-        const { suggested, notSuggested } = searchForMemberByName(
-          membersNotSignedIn,
-          searchInput
-        );
-        setMembersNotSignedIn(suggested.concat(notSuggested));
-        setIndex(suggested.length);
-        const { suggested: signedIn, notSuggested: signedInNotSuggested } =
-          searchForMemberInformationByName(membersSignedIn, searchInput);
-        setMembersSignedIn(signedIn.concat(signedInNotSuggested));
-        setIndexSignedIn(signedIn.length);
+        setSearchQuery(searchInput);
       } else if (prevSearchActive && searchInput.length === 0) {
-        setIndex(0);
-        setIndexSignedIn(membersSignedIn.length);
+        setSearchQuery("");
       }
     }, 500);
     return () => clearTimeout(delayDebounceFn);
@@ -351,6 +572,13 @@ export default function Event({
               <p className="text-xs font-medium text-gray-600">ENDED</p>
             )}
           </div>
+          <AttendanceFilterBar
+            filterState={filterState}
+            onFilterChange={handleFilterChange}
+            onSortChange={handleSortChange}
+            onClearAll={handleClearAllFilters}
+            onToggleMobileDrawer={toggleFilterDrawer}
+          />
           <AttendanceSearchBar
             disabled={!toggleEdit}
             searchInput={searchInput}
@@ -360,7 +588,10 @@ export default function Event({
             <div className="w-full">
               <AttendanceSuggested
                 disabled={!toggleEdit}
-                suggested={membersNotSignedIn.slice(0, index)}
+                suggested={filteredAndSortedMembersNotSignedIn.slice(0, index)}
+                filteredCount={
+                  filteredAndSortedMembersNotSignedIn.slice(0, index).length
+                }
                 searchInputLength={searchInput.length}
                 loadAnimation={loadAnimation}
                 create={() => {
@@ -435,7 +666,33 @@ export default function Event({
             <div className="w-full">
               <AttendanceSignedIn
                 disabled={!toggleEdit}
-                signedIn={membersSignedIn.slice(0, indexSignedIn)}
+                signedIn={filteredAndSortedMembersSignedIn.slice(
+                  0,
+                  indexSignedIn
+                )}
+                filteredCount={
+                  filteredAndSortedMembersSignedIn.slice(0, indexSignedIn)
+                    .length
+                }
+                mobileFilterButton={
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={toggleFilterDrawer}
+                      className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+                    >
+                      <FunnelIcon className="w-4 h-4" />
+                      Filters
+                    </button>
+                    <span className="text-xs text-gray-500">
+                      {
+                        Object.values(filterState.metadataFilters).filter(
+                          (v) => v !== "All"
+                        ).length
+                      }{" "}
+                      active
+                    </span>
+                  </div>
+                }
                 dietary={() =>
                   dietaryRequirements &&
                   setMembersSignedIn((msi) =>
@@ -506,6 +763,16 @@ export default function Event({
       ) : (
         <></>
       )}
+
+      {/* Mobile Filter Drawer */}
+      <AttendanceFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        filterState={filterState}
+        onFilterChange={handleFilterChange}
+        onSortChange={handleSortChange}
+        onClearAll={handleClearAllFilters}
+      />
     </>
   );
 }

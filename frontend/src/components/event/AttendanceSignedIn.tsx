@@ -3,12 +3,15 @@ import { useRef } from "react";
 import { MemberSignIn } from "./MemberSignInCard";
 import { MemberInformation } from "@/models/Event";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import useMediaQuery from "@/helper/useMediaQuery";
 
 interface AttendanceSignedInProps {
   disabled: boolean;
   signedIn?: MemberInformation[];
   dietary: () => void;
   totalAttendance: number;
+  filteredCount?: number;
+  mobileFilterButton?: React.ReactNode;
   action: (memberInfo: MemberInformation) => void;
   edit: (memberInfo: MemberInformation) => void;
 }
@@ -18,10 +21,13 @@ export default function AttendanceSignedIn({
   signedIn,
   dietary,
   totalAttendance,
+  filteredCount,
+  mobileFilterButton,
   action,
   edit,
 }: AttendanceSignedInProps) {
   const parentRef = useRef<HTMLDivElement>(null);
+  const mobile = useMediaQuery("(max-width: 768px)");
 
   const virtualizer = useVirtualizer({
     count: signedIn?.length || 0,
@@ -34,6 +40,10 @@ export default function AttendanceSignedIn({
 
   return (
     <div className="mt-2 bg-white mb-12">
+      {/* Mobile Filter Button - positioned above SIGNED IN text */}
+      {mobileFilterButton && mobile && (
+        <div className="mx-4 mb-2">{mobileFilterButton}</div>
+      )}
       <div className="flex items-center mx-4 mb-2 gap-2">
         <p className="text-gray-500 text-[10px] font-light align-middle">
           SIGNED IN
@@ -48,8 +58,15 @@ export default function AttendanceSignedIn({
               VIRTUAL: {items.length} of {signedIn?.length || 0}
             </p>
           </div> */}
+          {filteredCount !== undefined && (
+            <div className="py-1.5 px-1.5 rounded-lg bg-gray-200">
+              <p className="text-[10px] font-light text-gray-700">
+                CURRENT: {filteredCount}
+              </p>
+            </div>
+          )}
           <div className="py-1.5 px-1.5 rounded-lg bg-gray-200">
-            <p className="text-[10px] font-light">
+            <p className="text-[10px] font-light text-gray-700">
               ATTENDANCE: {totalAttendance}
             </p>
           </div>

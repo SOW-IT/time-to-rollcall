@@ -2,6 +2,10 @@
 import Loader from "@/components/Loader";
 import Topbar from "@/components/Topbar";
 import AttendanceSearchBar from "@/components/event/AttendanceSearchBar";
+import AttendanceFilterBar, {
+  MembersFilterState,
+} from "@/components/event/AttendanceFilterBar";
+import AttendanceFilterDrawer from "@/components/event/AttendanceFilterDrawer";
 import EditMember from "@/components/members/EditMember";
 import Members from "@/components/members/Members";
 import { currentYearStr } from "@/helper/Time";
@@ -12,16 +16,9 @@ import { createMember, deleteMember, updateMember } from "@/lib/members";
 import { GroupId } from "@/models/Group";
 import { InitMember, MemberModel } from "@/models/Member";
 import { MetadataSelectModel } from "@/models/Metadata";
-import { University, universityIds } from "@/models/University";
-import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-} from "@headlessui/react";
+import { universityIds } from "@/models/University";
 import { doc } from "firebase/firestore";
-import { useContext, useEffect, useState } from "react";
-import { searchForMemberByName } from "services/attendanceService";
+import { useContext, useEffect, useState, useMemo } from "react";
 
 export default function GroupMember({
   params,
@@ -36,14 +33,22 @@ export default function GroupMember({
   const [selectedMember, setSelectedMember] = useState<MemberModel>(
     InitMember("")
   );
-  const [membersShown, setMembersShown] = useState<MemberModel[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  // Filter state management
+  const [filterState, setFilterState] = useState<MembersFilterState>({
+    metadataFilters: {},
+    sortBy: "name",
+    sortDirection: "asc",
+    sortMetadataField: undefined,
+  });
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
   useEffect(() => {
     setLoading(false);
-    setMembersShown(members ?? []);
   }, [members]);
 
   useEffect(() => {
@@ -51,12 +56,9 @@ export default function GroupMember({
       let prevSearchActive = searchActive;
       setSearchActive(searchInput.length > 0);
       if (searchInput.length > 0) {
-        const { suggested } = searchForMemberByName(members ?? [], searchInput);
-        setMembersShown(suggested);
-        setCampusFilter("Unselected");
+        setSearchQuery(searchInput);
       } else if (prevSearchActive && searchInput.length === 0) {
-        setMembersShown(members ?? []);
-        setCampusFilter("Unselected");
+        setSearchQuery("");
       }
     }, 500);
     return () => clearTimeout(delayDebounceFn);
@@ -67,25 +69,150 @@ export default function GroupMember({
     (m) => m.key === "Campus" && m.type === "select"
   ) as MetadataSelectModel | undefined;
 
-  const [campusFilter, setCampusFilter] = useState<University | "Unselected">(
-    "Unselected"
-  );
-  useEffect(() => {
-    if (campusFilter === "Unselected") {
-      setMembersShown(members ?? []);
-    } else {
-      setMembersShown(
-        campus && members
-          ? members.filter(
-              (m) =>
-                m.metadata &&
-                campus.values[m.metadata[campus.id]] === campusFilter
-            )
-          : []
-      );
+  // Apply search filter by name
+  const applySearchFilter = (
+    data: MemberModel[],
+    query: string
+  ): MemberModel[] => {
+    if (!query || query.length === 0) return data;
+    return data.filter((member) =>
+      member.name.toLowerCase().includes(query.toLowerCase())
+    );
+  };
+
+  // Filter and sort logic functions
+  const handleFilterChange = (metadataId: string, value: string) => {
+    setFilterState((prev) => ({
+      ...prev,
+      metadataFilters: {
+        ...prev.metadataFilters,
+        [metadataId]: value,
+      },
+    }));
+  };
+
+  const handleSortChange = (
+    sortBy: "name" | "metadata" | "signInTime",
+    direction: "asc" | "desc",
+    metadataField?: string
+  ) => {
+    // Only allow name and metadata for members page
+    if (sortBy === "signInTime") return;
+
+    setFilterState((prev) => ({
+      ...prev,
+      sortBy: sortBy as "name" | "metadata",
+      sortDirection: direction,
+      sortMetadataField: metadataField,
+    }));
+  };
+
+  const handleClearAllFilters = () => {
+    setFilterState({
+      metadataFilters: {},
+      sortBy: "name",
+      sortDirection: "asc",
+      sortMetadataField: undefined,
+    });
+    setSearchQuery("");
+    setSearchInput("");
+  };
+
+  const toggleFilterDrawer = () => {
+    setIsFilterDrawerOpen(!isFilterDrawerOpen);
+  };
+
+  // Apply filters to data
+  const applyFilters = (data: MemberModel[]): MemberModel[] => {
+    if (!metadata || Object.keys(filterState.metadataFilters).length === 0) {
+      return data;
     }
-    // eslint-disable-next-line
-  }, [campusFilter]);
+
+    return data.filter((member) => {
+      return Object.entries(filterState.metadataFilters).every(
+        ([metadataId, filterValue]) => {
+          if (filterValue === "All") return true;
+
+          const metadataField = metadata.find((m) => m.id === metadataId);
+          if (!metadataField || metadataField.type !== "select") return true;
+
+          const selectMetadata = metadataField as MetadataSelectModel;
+          const memberValue = member.metadata?.[metadataId];
+
+          if (filterValue === "Unselected") {
+            return !memberValue;
+          }
+
+          // Find the metadata value by matching the display value
+          const metadataValueId = Object.entries(selectMetadata.values).find(
+            ([_, value]) => value === filterValue
+          )?.[0];
+          return memberValue === metadataValueId;
+        }
+      );
+    });
+  };
+
+  // Apply sorting to filtered data
+  const applySorting = (data: MemberModel[]): MemberModel[] => {
+    if (!data.length) return data;
+
+    const sortedData = [...data];
+
+    switch (filterState.sortBy) {
+      case "name":
+        sortedData.sort((a, b) => {
+          const nameA = a.name.toLowerCase();
+          const nameB = b.name.toLowerCase();
+          return filterState.sortDirection === "asc"
+            ? nameA.localeCompare(nameB)
+            : nameB.localeCompare(nameA);
+        });
+        break;
+
+      case "metadata":
+        if (filterState.sortMetadataField) {
+          const metadataField = metadata?.find(
+            (m) => m.key === filterState.sortMetadataField
+          );
+          if (metadataField && metadataField.type === "select") {
+            const selectMetadata = metadataField as MetadataSelectModel;
+            sortedData.sort((a, b) => {
+              const valueA = a.metadata?.[selectMetadata.id];
+              const valueB = b.metadata?.[selectMetadata.id];
+
+              const displayA = valueA
+                ? selectMetadata.values[valueA] || valueA
+                : "";
+              const displayB = valueB
+                ? selectMetadata.values[valueB] || valueB
+                : "";
+
+              return filterState.sortDirection === "asc"
+                ? displayA.localeCompare(displayB)
+                : displayB.localeCompare(displayA);
+            });
+          }
+        }
+        break;
+    }
+
+    return sortedData;
+  };
+
+  // Apply filters and sorting with useMemo for performance
+  const filteredAndSortedMembers = useMemo(() => {
+    if (!members) return [];
+
+    // Step 1: Apply search filter
+    const searchFiltered = applySearchFilter(members, searchQuery);
+
+    // Step 2: Apply metadata filters
+    const metadataFiltered = applyFilters(searchFiltered);
+
+    // Step 3: Apply sorting
+    return applySorting(metadataFiltered);
+  }, [members, searchQuery, filterState, metadata]);
 
   function closeModal() {
     setIsOpen(false);
@@ -203,31 +330,17 @@ export default function GroupMember({
         />
       )}
       <h1 className="mx-4 mt-3 text-2xl mb-16">Members</h1>
-      <p>Filter Campus:</p>
-      <Listbox
-        value={campusFilter}
-        onChange={(filter) => setCampusFilter(filter)}
-      >
-        <ListboxButton>{campusFilter ?? "Unselected"}</ListboxButton>
-        <ListboxOptions
-          anchor="top"
-          transition
-          className="rounded-xl border border-white/5 bg-gray-100 p-1 focus:outline-none transition duration-100 ease-in data-[leave]:data-[closed]:opacity-0"
-        >
-          {Object.keys(universityIds)
-            .concat("Unselected")
-            .map((uni, i) => (
-              <ListboxOption
-                key={i}
-                value={uni}
-                onClick={() => setCampusFilter(uni as University)}
-                className="group flex justify-between cursor-pointer items-center rounded-lg px-2 select-none data-[focus]:bg-white/10 data-[selected]:bg-gray-200 data-[focus]:bg-gray-200"
-              >
-                {uni}
-              </ListboxOption>
-            ))}
-        </ListboxOptions>
-      </Listbox>
+
+      {/* Filter and Sort UI */}
+      <AttendanceFilterBar
+        filterState={filterState}
+        onFilterChange={handleFilterChange}
+        onSortChange={handleSortChange}
+        onClearAll={handleClearAllFilters}
+        onToggleMobileDrawer={toggleFilterDrawer}
+        showSignInTime={false}
+      />
+
       <div className="relative">
         <div className="mb-2">
           <AttendanceSearchBar
@@ -238,7 +351,7 @@ export default function GroupMember({
         </div>
         <div className="z-20 w-full">
           <Members
-            members={membersShown ?? []}
+            members={filteredAndSortedMembers}
             disabled={disabled}
             action={(member: MemberModel) => {
               setSelectedMember(member);
@@ -272,6 +385,17 @@ export default function GroupMember({
           Create New Member
         </button>
       )}
+
+      {/* Mobile Filter Drawer */}
+      <AttendanceFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        filterState={filterState}
+        onFilterChange={handleFilterChange}
+        onSortChange={handleSortChange}
+        onClearAll={handleClearAllFilters}
+        showSignInTime={false}
+      />
     </>
   );
 }

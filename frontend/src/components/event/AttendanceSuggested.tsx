@@ -9,6 +9,7 @@ import { useRef } from "react";
 interface AttendanceSuggested {
   disabled: boolean;
   suggested: MemberModel[];
+  filteredCount: number;
   searchInputLength: number;
   create: () => void;
   action: (memberInfo: MemberInformation) => void;
@@ -19,6 +20,7 @@ interface AttendanceSuggested {
 export default function AttendanceSuggested({
   disabled,
   suggested,
+  filteredCount,
   searchInputLength,
   create,
   action,
@@ -51,6 +53,13 @@ export default function AttendanceSuggested({
                 VIRTUAL: {items.length} of {suggested.length}
               </p>
             </div> */}
+            {filteredCount !== undefined && (
+              <div className="py-1.5 px-1.5 rounded-lg bg-gray-200">
+                <p className="text-[10px] font-light text-gray-700">
+                  CURRENT: {filteredCount}
+                </p>
+              </div>
+            )}
             <button
               type="button"
               className="text-center text-gray-700 text-[10px] rounded-lg font-light py-1.5 px-1.5 bg-green-200 hover:bg-green-300 active:bg-green-300"
