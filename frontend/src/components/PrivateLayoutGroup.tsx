@@ -1,4 +1,5 @@
 "use client";
+import { currentSOWYearStr, currentYearStr } from "@/helper/Time";
 import {
   EventsContext,
   GroupContext,
@@ -30,7 +31,7 @@ export default function PrivateLayoutGroup({
   const group = useGroupListener(user, groupId ?? params.groupId);
   const members = useMembersListener(
     user,
-    params.year,
+    params.year === currentYearStr ? currentSOWYearStr : params.year,
     groupId ?? params.groupId
   );
   const metadata = useMetadataListener(user, groupId ?? params.groupId);

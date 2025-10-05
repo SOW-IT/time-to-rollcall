@@ -1,4 +1,4 @@
-import { currentYearStr } from "@/helper/Time";
+import { currentSOWYearStr } from "@/helper/Time";
 import { convertToFirestore, firestore } from "@/lib/firebase";
 import { GroupId } from "@/models/Group";
 import { MemberId, MemberModel } from "@/models/Member";
@@ -18,7 +18,7 @@ export async function createMember(groupId: GroupId, member: MemberModel) {
       "groups",
       groupId,
       "members",
-      currentYearStr,
+      currentSOWYearStr,
       "members"
     ),
     convertMemberToDocument(member)
@@ -40,7 +40,7 @@ export async function deleteMember(groupId: GroupId, memberId: MemberId) {
       "groups",
       groupId,
       "members",
-      currentYearStr,
+      currentSOWYearStr,
       "members",
       memberId
     )
@@ -64,7 +64,7 @@ export function convertMemberIdToReference(
     "groups",
     groupId,
     "members",
-    currentYearStr,
+    currentSOWYearStr,
     "members",
     memberId
   );

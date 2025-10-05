@@ -8,7 +8,7 @@ import AttendanceFilterBar, {
 import AttendanceFilterDrawer from "@/components/event/AttendanceFilterDrawer";
 import EditMember from "@/components/members/EditMember";
 import Members from "@/components/members/Members";
-import { currentYearStr } from "@/helper/Time";
+import { currentSOWYearStr, currentYearStr } from "@/helper/Time";
 import { promiseToast } from "@/helper/Toast";
 import { GroupContext, MembersContext, MetadataContext } from "@/lib/context";
 import { firestore } from "@/lib/firebase";
@@ -249,7 +249,7 @@ export default function GroupMember({
                 "groups",
                 params.groupId,
                 "members",
-                currentYearStr,
+                currentSOWYearStr,
                 "members",
                 selectedMember.id
               ),

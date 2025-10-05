@@ -10,7 +10,7 @@ import AttendanceFilterBar, {
 import AttendanceFilterDrawer from "@/components/event/AttendanceFilterDrawer";
 import LiveBadge from "@/components/event/LiveBadge";
 import EditMember from "@/components/members/EditMember";
-import { currentYearStr, inBetween } from "@/helper/Time";
+import { currentSOWYearStr, currentYearStr, inBetween } from "@/helper/Time";
 import { promiseToast } from "@/helper/Toast";
 import {
   EventContext,
@@ -386,7 +386,7 @@ export default function Event({
               "groups",
               params.groupId,
               "members",
-              currentYearStr,
+              currentSOWYearStr,
               "members",
               selectedMemberInfo.member.id
             ),
