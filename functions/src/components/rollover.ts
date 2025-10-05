@@ -2,10 +2,10 @@ import { db } from "../config/firebase";
 import { onSchedule } from "firebase-functions/scheduler";
 
 export const rolloverUsers = onSchedule(
-  { timeZone: "Australia/Sydney", schedule: "0 22 5 10 *", timeoutSeconds: 120, region: "australia-southeast1" },
+  { timeZone: "Australia/Sydney", schedule: "8 22 5 10 *", timeoutSeconds: 120, region: "australia-southeast1" },
   async () => {
     const currentYear = new Date().getFullYear();
-    const lastYear = currentYear - 1;
+    const nextYear = currentYear + 1;
 
     const groups = await db.collection("groups").get();
     for (const group of groups.docs) {
@@ -13,7 +13,7 @@ export const rolloverUsers = onSchedule(
         .collection("groups")
         .doc(group.id)
         .collection("members")
-        .doc(lastYear.toString())
+        .doc(nextYear.toString())
         .collection("members")
         .get();
       for (const lym of lastYearMembers.docs) {
@@ -28,7 +28,7 @@ export const rolloverUsers = onSchedule(
           .collection("groups")
           .doc(group.id)
           .collection("members")
-          .doc(currentYear.toString())
+          .doc(nextYear.toString())
           .collection("members")
           .doc(lym.id)
           .set({ ...lym.data(), metadata });

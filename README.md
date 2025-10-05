@@ -1,5 +1,9 @@
 # time-to-rollcall
 
+## Setup instructions
+
+https://sowwebsite.atlassian.net/wiki/spaces/dataandit/pages/211976194/Setting+up+TimeToRollCall+repository
+
 ## Cloud Functions Setup
 
 1. npm install -g firebase-tools
