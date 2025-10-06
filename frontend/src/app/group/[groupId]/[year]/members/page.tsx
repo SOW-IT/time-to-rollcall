@@ -19,6 +19,8 @@ import { MetadataSelectModel } from "@/models/Metadata";
 import { universityIds } from "@/models/University";
 import { doc } from "firebase/firestore";
 import { useContext, useEffect, useState, useMemo } from "react";
+import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
+import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid";
 
 export default function GroupMember({
   params,
@@ -329,7 +331,24 @@ export default function GroupMember({
           updatingDelete={updatingDelete}
         />
       )}
-      <h1 className="mx-4 mt-3 text-2xl mb-16">Members</h1>
+      <div className="flex justify-between items-center mx-4  mt-3 mb-16">
+        <h1 className="text-2xl">Members</h1>
+        <Popover className="relative">
+          <PopoverButton>
+            <QuestionMarkCircleIcon className="cursor-pointer w-6 h-6 text-gray-500" />
+          </PopoverButton>
+          <PopoverPanel
+            anchor="bottom"
+            transition
+            className="flex origin-top flex-col transition duration-200 ease-out data-closed:scale-95 data-closed:opacity-0"
+          >
+            <p className="italic text-xs backdrop-blur-sm">
+              User data for the next serving term can be changed from October
+              1st.
+            </p>
+          </PopoverPanel>
+        </Popover>
+      </div>
 
       {/* Filter and Sort UI */}
       <AttendanceFilterBar
