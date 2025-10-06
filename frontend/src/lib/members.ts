@@ -33,18 +33,11 @@ export async function updateMember(
   await setDoc(docRef, convertMemberToDocument(member));
 }
 
-export async function deleteMember(groupId: GroupId, memberId: MemberId) {
-  await deleteDoc(
-    doc(
-      firestore,
-      "groups",
-      groupId,
-      "members",
-      currentSOWYearStr,
-      "members",
-      memberId
-    )
-  );
+export async function deleteMember(docRef?: DocumentReference) {
+  if (!docRef) {
+    return Promise.reject("Document reference is missing");
+  }
+  await deleteDoc(docRef);
 }
 
 function convertMemberToDocument(member: MemberModel) {

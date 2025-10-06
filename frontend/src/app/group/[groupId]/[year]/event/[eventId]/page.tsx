@@ -10,7 +10,7 @@ import AttendanceFilterBar, {
 import AttendanceFilterDrawer from "@/components/event/AttendanceFilterDrawer";
 import LiveBadge from "@/components/event/LiveBadge";
 import EditMember from "@/components/members/EditMember";
-import { currentSOWYearStr, currentYearStr, inBetween } from "@/helper/Time";
+import { currentYearStr, inBetween } from "@/helper/Time";
 import { promiseToast } from "@/helper/Toast";
 import {
   EventContext,
@@ -23,7 +23,6 @@ import {
   removeMemberFromEvent,
   updateEventMembers,
 } from "@/lib/events";
-import { firestore } from "@/lib/firebase";
 import { createMember, deleteMember, updateMember } from "@/lib/members";
 import { EventId, MemberInformation } from "@/models/Event";
 import { GroupId } from "@/models/Group";
@@ -31,7 +30,6 @@ import { InitMember, MemberModel } from "@/models/Member";
 import { MetadataSelectModel } from "@/models/Metadata";
 import { universityIds } from "@/models/University";
 import { useGSAP } from "@gsap/react";
-import { doc } from "firebase/firestore";
 import gsap from "gsap";
 import Draggable from "gsap/dist/Draggable";
 import { useContext, useEffect, useState, useMemo } from "react";
@@ -356,23 +354,7 @@ export default function Event({
         selectedMemberInfo.member
       );
       await promiseToast<void>(
-        addMemberToEvent(
-          groupId,
-          eventId,
-          doc(
-            firestore,
-            "groups",
-            campus && selectedMemberInfo.member.metadata
-              ? universityIds[
-                  campus.values[selectedMemberInfo.member.metadata[campus.id]]
-                ] ?? params.groupId
-              : params.groupId,
-            "members",
-            currentYearStr,
-            "members",
-            newMember.id
-          )
-        ),
+        addMemberToEvent(groupId, eventId, newMember.docRef),
         "Creating and Adding Member...",
         "Member Created and Added!",
         "Could not create and added member."
@@ -380,16 +362,7 @@ export default function Event({
     } else {
       await promiseToast<void>(
         updateMember(
-          selectedMemberInfo.member.docRef ??
-            doc(
-              firestore,
-              "groups",
-              params.groupId,
-              "members",
-              currentSOWYearStr,
-              "members",
-              selectedMemberInfo.member.id
-            ),
+          selectedMemberInfo.member.docRef,
           selectedMemberInfo.member
         ),
         "Updating Member...",
@@ -401,7 +374,7 @@ export default function Event({
         event?.members
       ) {
         const index = event.members.findIndex(
-          (m) => m.member.id === selectedMemberInfo.member.id
+          (m) => m.member.docRef === selectedMemberInfo.member.docRef
         );
         if (index !== -1) {
           await promiseToast<void>(
@@ -428,14 +401,16 @@ export default function Event({
           ?.sort((a, b) => a.name.localeCompare(b.name))
           .filter(
             (m) =>
-              !event?.members?.some((signedIn) => signedIn.member.id === m.id)
+              !event?.members?.some(
+                (signedIn) => signedIn.member.docRef === m.docRef
+              )
           ) ?? [];
       let membersSignedIn =
         (event.members
           ?.sort((a, b) => a.member.name.localeCompare(b.member.name))
           .map((mi) => ({
             ...mi,
-            member: members?.find((m) => m.id === mi.member.id),
+            member: members?.find((m) => m.docRef === mi.member.docRef),
           }))
           .filter((mi) => mi.member !== undefined) as MemberInformation[]) ??
         [];
@@ -471,7 +446,7 @@ export default function Event({
     if (params.groupId && event && selectedMemberInfo.member) {
       if (
         membersSignedIn.find(
-          (msi) => msi.member.id === selectedMemberInfo.member.id
+          (msi) => msi.member.docRef === selectedMemberInfo.member.docRef
         )
       ) {
         await promiseToast<void>(
@@ -479,7 +454,7 @@ export default function Event({
             groupId,
             eventId,
             event.members?.find(
-              (m) => m.member.id === selectedMemberInfo.member.id
+              (m) => m.member.docRef === selectedMemberInfo.member.docRef
             )
           ),
           `Removing ${selectedMemberInfo.member.name}...`,
@@ -488,14 +463,7 @@ export default function Event({
         );
       }
       await promiseToast<void>(
-        deleteMember(
-          campus && selectedMemberInfo.member.metadata
-            ? universityIds[
-                campus.values[selectedMemberInfo.member.metadata[campus.id]]
-              ] ?? params.groupId
-            : params.groupId,
-          selectedMemberInfo.member.id
-        ),
+        deleteMember(selectedMemberInfo.member.docRef),
         "Deleting Member...",
         "Member Deleted!",
         "Could not delete member."
@@ -616,34 +584,15 @@ export default function Event({
                 action={(memberInfo: MemberInformation) => {
                   const { member } = memberInfo;
                   promiseToast<void>(
-                    event.members?.some((m) => m.member.id === member.id)
+                    event.members?.some(
+                      (m) => m.member.docRef === member.docRef
+                    )
                       ? (() => {
                           throw new Error(
                             `${member.name} is already a member of the event.`
                           );
                         })()
-                      : addMemberToEvent(
-                          groupId,
-                          eventId,
-                          member.docRef ??
-                            doc(
-                              firestore,
-                              "groups",
-                              campus && selectedMemberInfo.member.metadata
-                                ? universityIds[
-                                    campus.values[
-                                      selectedMemberInfo.member.metadata[
-                                        campus.id
-                                      ]
-                                    ]
-                                  ] ?? params.groupId
-                                : params.groupId,
-                              "members",
-                              currentYearStr,
-                              "members",
-                              member.id
-                            )
-                        ),
+                      : addMemberToEvent(groupId, eventId, member.docRef),
                     `Adding ${member.name}...`,
                     `${member.name} Added!`,
                     `Could not add ${member.name}.`
@@ -708,7 +657,9 @@ export default function Event({
                     removeMemberFromEvent(
                       groupId,
                       eventId,
-                      event.members?.find((m) => m.member.id === member.id)
+                      event.members?.find(
+                        (m) => m.member.docRef === member.docRef
+                      )
                     ),
                     `Removing ${member.name}...`,
                     `${member.name} Removed!`,

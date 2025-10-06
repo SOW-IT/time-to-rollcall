@@ -8,16 +8,14 @@ import AttendanceFilterBar, {
 import AttendanceFilterDrawer from "@/components/event/AttendanceFilterDrawer";
 import EditMember from "@/components/members/EditMember";
 import Members from "@/components/members/Members";
-import { currentSOWYearStr, currentYearStr } from "@/helper/Time";
+import { currentYearStr } from "@/helper/Time";
 import { promiseToast } from "@/helper/Toast";
 import { GroupContext, MembersContext, MetadataContext } from "@/lib/context";
-import { firestore } from "@/lib/firebase";
 import { createMember, deleteMember, updateMember } from "@/lib/members";
 import { GroupId } from "@/models/Group";
 import { InitMember, MemberModel } from "@/models/Member";
 import { MetadataSelectModel } from "@/models/Metadata";
 import { universityIds } from "@/models/University";
-import { doc } from "firebase/firestore";
 import { useContext, useEffect, useState, useMemo } from "react";
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid";
@@ -244,19 +242,7 @@ export default function GroupMember({
         );
       } else {
         await promiseToast<void>(
-          updateMember(
-            selectedMember.docRef ??
-              doc(
-                firestore,
-                "groups",
-                params.groupId,
-                "members",
-                currentSOWYearStr,
-                "members",
-                selectedMember.id
-              ),
-            selectedMember
-          ),
+          updateMember(selectedMember.docRef, selectedMember),
           "Updating Member...",
           "Member Updated!",
           "Could not create member."
@@ -272,14 +258,7 @@ export default function GroupMember({
     setUpdatingDelete(true);
     if (group && selectedMember) {
       await promiseToast<void>(
-        deleteMember(
-          campus && selectedMember.metadata
-            ? universityIds[
-                campus.values[selectedMember.metadata[campus.id]]
-              ] ?? params.groupId
-            : params.groupId,
-          selectedMember.id
-        ),
+        deleteMember(selectedMember.docRef),
         "Deleting Member...",
         "Member Deleted!",
         "Could not delete member."
