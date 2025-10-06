@@ -15,7 +15,6 @@ import { promiseToast } from "@/helper/Toast";
 import {
   EventContext,
   GroupContext,
-  MembersContext,
   MetadataContext,
   UserContext,
 } from "@/lib/context";
@@ -37,6 +36,7 @@ import { useContext, useEffect, useState, useMemo } from "react";
 
 import { FunnelIcon } from "@heroicons/react/24/outline";
 import { useMembersListener } from "@/lib/hooks";
+import { isFuzzyNameMatch } from "@/helper/searchQuery";
 
 gsap.registerPlugin(Draggable, useGSAP);
 
@@ -55,9 +55,7 @@ export default function Event({
   const group = useContext(GroupContext);
   const user = useContext(UserContext);
   const sowYearStr = event ? getSOWYear(event.dateStart).toString() : undefined;
-  const members = sowYearStr
-    ? useMembersListener(user, sowYearStr, groupId)
-    : useContext(MembersContext);
+  const members = useMembersListener(user, sowYearStr, groupId);
   const [loading, setLoading] = useState(true);
   const [membersNotSignedIn, setMembersNotSignedIn] = useState<MemberModel[]>(
     []
@@ -189,9 +187,7 @@ export default function Event({
     query: string
   ): MemberModel[] => {
     if (!query || query.length === 0) return data;
-    return data.filter((member) =>
-      member.name.toLowerCase().includes(query.toLowerCase())
-    );
+    return data.filter((member) => isFuzzyNameMatch(query, member.name));
   };
 
   // Apply search filter by name for MemberInformation[] (signed in)
@@ -201,7 +197,7 @@ export default function Event({
   ): MemberInformation[] => {
     if (!query || query.length === 0) return data;
     return data.filter((memberInfo) =>
-      memberInfo.member.name.toLowerCase().includes(query.toLowerCase())
+      isFuzzyNameMatch(query, memberInfo.member.name)
     );
   };
 
@@ -304,6 +300,7 @@ export default function Event({
 
     // Step 3: Apply sorting
     return applySorting<MemberModel>(metadataFiltered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membersNotSignedIn, searchQuery, filterState, metadata]);
 
   // Calculate index for not signed in members based on search results
@@ -337,6 +334,7 @@ export default function Event({
 
     // Step 3: Apply sorting
     return applySorting<MemberInformation>(metadataFiltered);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [membersSignedIn, searchQuery, filterState, metadata]);
 
   async function editMember() {

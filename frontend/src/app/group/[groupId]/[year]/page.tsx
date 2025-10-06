@@ -270,18 +270,17 @@ export default function Group({
                   }
                 >
                   <EventComponent
-                    collabUnis={(event.groupId
-                      ? [universityNames[event.groupId]]
-                      : []
-                    )
-                      .concat(
-                        event.collaboration
-                          ? event.collaboration.map(
-                              (gId) => universityNames[gId]
+                    collabUnis={
+                      event.collaboration
+                        ? event.collaboration
+                            .map((gId) => universityNames[gId])
+                            .concat(
+                              event.groupId
+                                ? [universityNames[event.groupId]]
+                                : []
                             )
-                          : []
-                      )
-                      .filter((g) => g !== universityNames[params.groupId])}
+                        : []
+                    }
                     event={event}
                     showButton
                     disabled={
