@@ -4,7 +4,7 @@ import {
   convertToJavascript,
   firestore,
 } from "@/lib/firebase";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { addGroupToUserGroups, removeGroupFromUserGroups } from "./users";
 import { User } from "@/models/User";
@@ -91,13 +91,15 @@ export function useGroupsListener(user: User | null | undefined) {
 
 export function useMembersListener(
   user: User | null | undefined,
-  year: string,
+  year?: string,
   groupId?: string
 ) {
   const { data: members } = useFirestoreCol<MemberModel>(
     firestore,
     `groups/${groupId}/members/${year}/members`,
-    user !== null && groupId && user?.groups?.includes(groupId) ? true : false,
+    user !== null && groupId && year && user?.groups?.includes(groupId)
+      ? true
+      : false,
     orderBy("name", "asc")
   );
   const { data: members1 } = useFirestoreCol<MemberModel>(
@@ -106,6 +108,7 @@ export function useMembersListener(
     user !== null &&
       Object.values(universityIds).includes(groupId ?? "") &&
       groupId !== universityIds[University.USYD] &&
+      year &&
       universityIds[University.USYD]
       ? true
       : false,
@@ -117,6 +120,7 @@ export function useMembersListener(
     user !== null &&
       Object.values(universityIds).includes(groupId ?? "") &&
       groupId !== universityIds[University.UTS] &&
+      year &&
       universityIds[University.UTS]
       ? true
       : false,
@@ -128,6 +132,7 @@ export function useMembersListener(
     user !== null &&
       Object.values(universityIds).includes(groupId ?? "") &&
       groupId !== universityIds[University.UNSW] &&
+      year &&
       universityIds[University.UNSW]
       ? true
       : false,
@@ -139,6 +144,7 @@ export function useMembersListener(
     user !== null &&
       Object.values(universityIds).includes(groupId ?? "") &&
       groupId !== universityIds[University.MACQ] &&
+      year &&
       universityIds[University.MACQ]
       ? true
       : false,
@@ -150,17 +156,21 @@ export function useMembersListener(
     user !== null &&
       Object.values(universityIds).includes(groupId ?? "") &&
       groupId !== universityIds[University.SOW] &&
+      year &&
       universityIds[University.SOW]
       ? true
       : false,
     orderBy("name", "asc")
   );
-  return members
-    ?.concat(members1 ?? [])
-    .concat(members2 ?? [])
-    .concat(members3 ?? [])
-    .concat(members4 ?? [])
-    .concat(members5 ?? []);
+  const allMembers = useMemo(() => {
+    return members
+      ?.concat(members1 ?? [])
+      .concat(members2 ?? [])
+      .concat(members3 ?? [])
+      .concat(members4 ?? [])
+      .concat(members5 ?? []);
+  }, [members, members1, members2, members3, members4, members5]); // Dependencies are the six result arrays
+  return allMembers;
 }
 
 export function useMetadataListener(

@@ -1,6 +1,7 @@
 import { doc, DocumentReference } from "firebase/firestore";
 import { MetadataId, MetadataValueId } from "./Metadata";
 import { firestore } from "@/lib/firebase";
+import { UserId } from "./User";
 
 export interface MemberMetadataModel {
   [key: MetadataId]: MetadataValueId | string;
@@ -14,6 +15,7 @@ export interface MemberModel {
   name: string;
   email?: string;
   metadata?: MemberMetadataModel;
+  createdBy?: UserId;
 }
 
 export const InitMember = (

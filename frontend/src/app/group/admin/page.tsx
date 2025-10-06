@@ -13,11 +13,8 @@ import {
   DocumentReference,
   getDoc,
   getDocs,
-  query,
-  setDoc,
   Timestamp,
   updateDoc,
-  where,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect } from "react";
@@ -26,7 +23,7 @@ export default function GroupAdmin() {
   const user = useContext(UserContext);
   const groups = useGroupsListener(user);
   const router = useRouter();
-  const members = useMembersListener(user, "2025", "ccSgQTXvLRnin0OjwvRM");
+  const members = useMembersListener(user, "2026", "ccSgQTXvLRnin0OjwvRM");
 
   useEffect(() => {
     if (user) {
@@ -37,41 +34,114 @@ export default function GroupAdmin() {
     // eslint-disable-next-line
   }, [user]);
 
-  const removeMembersFromEventGroup = async (groupId: string) => {
+  const changeDocRefPath = async (groupId: string) => {
     console.log("Working on group: " + groupId);
+
     const events = await getDocs(
       collection(firestore, "groups", groupId, "events")
     );
     for (const event of events.docs) {
       console.log("Working on event: " + event.data().name);
       const data = event.data();
-      if (data.members) {
-        console.log("Member count: " + data.members.length);
-        const updatedMembers = [];
-        for (const m of data.members) {
-          const memb = await getDoc(m.member);
-          if (memb.exists()) {
-            updatedMembers.push(m);
+      if (data.members && data.dateStart.toDate() > new Date(2025, 0, 1)) {
+        if (
+          data.dateStart.toDate() <
+          new Date(data.dateStart.toDate().getFullYear(), 9, 1)
+        ) {
+          console.log("next -> curr");
+          const updatedMembers = [];
+          for (const m of data.members) {
+            const memb = m.member as DocumentReference;
+            if (memb.path) {
+              updatedMembers.push({
+                ...m,
+                member: doc(
+                  firestore,
+                  memb.path.replace(
+                    `/${data.dateStart.toDate().getFullYear() + 1}/`,
+                    `/${data.dateStart.toDate().getFullYear()}/`
+                  )
+                ),
+              });
+            }
           }
+          await updateDoc(
+            doc(firestore, "groups", groupId, "events", event.id),
+            {
+              members: updatedMembers,
+            }
+          );
+        } else if (
+          data.dateStart.toDate() >=
+          new Date(data.dateStart.toDate().getFullYear(), 9, 1)
+        ) {
+          console.log("curr -> next");
+          const updatedMembers = [];
+          for (const m of data.members) {
+            const memb = m.member as DocumentReference;
+            if (memb.path) {
+              updatedMembers.push({
+                ...m,
+                member: doc(
+                  firestore,
+                  memb.path.replace(
+                    `/${data.dateStart.toDate().getFullYear()}/`,
+                    `/${data.dateStart.toDate().getFullYear() + 1}/`
+                  )
+                ),
+              });
+            }
+          }
+          await updateDoc(
+            doc(firestore, "groups", groupId, "events", event.id),
+            {
+              members: updatedMembers,
+            }
+          );
         }
-        await updateDoc(doc(firestore, "groups", groupId, "events", event.id), {
-          members: updatedMembers,
-        });
-        console.log("Member count after removal: " + updatedMembers.length);
       }
     }
-    console.log("Finish group: " + groupId);
   };
 
-  const removeMembersFromEvent = async () => {
-    groups?.map((g) => removeMembersFromEventGroup(g.id));
-    const universityIds = {
-      1: "ccSgQTXvLRnin0OjwvRM",
-      2: "CZHRnKJ8SDnfMIw64WJu",
-      3: "MUSmSaufEfgdJUX4Kx4G",
-      4: "wrsDV3XfwQB4RD7BxKD2",
-    };
+  const membersOfThatEventShouldBeThatYear = async () => {
+    groups?.map((g) => changeDocRefPath(g.id));
   };
+
+  // const removeMembersFromEventGroup = async (groupId: string) => {
+  //   console.log("Working on group: " + groupId);
+  //   const events = await getDocs(
+  //     collection(firestore, "groups", groupId, "events")
+  //   );
+  //   for (const event of events.docs) {
+  //     console.log("Working on event: " + event.data().name);
+  //     const data = event.data();
+  //     if (data.members) {
+  //       console.log("Member count: " + data.members.length);
+  //       const updatedMembers = [];
+  //       for (const m of data.members) {
+  //         const memb = await getDoc(m.member);
+  //         if (memb.exists()) {
+  //           updatedMembers.push(m);
+  //         }
+  //       }
+  //       await updateDoc(doc(firestore, "groups", groupId, "events", event.id), {
+  //         members: updatedMembers,
+  //       });
+  //       console.log("Member count after removal: " + updatedMembers.length);
+  //     }
+  //   }
+  //   console.log("Finish group: " + groupId);
+  // };
+
+  // const removeMembersFromEvent = async () => {
+  //   groups?.map((g) => removeMembersFromEventGroup(g.id));
+  //   const universityIds = {
+  //     1: "ccSgQTXvLRnin0OjwvRM",
+  //     2: "CZHRnKJ8SDnfMIw64WJu",
+  //     3: "MUSmSaufEfgdJUX4Kx4G",
+  //     4: "wrsDV3XfwQB4RD7BxKD2",
+  //   };
+  // };
 
   const replaceMember = (
     from: DocumentReference,
@@ -103,66 +173,69 @@ export default function GroupAdmin() {
   };
 
   // THIS IS DANGEROUS!
-  // const combineSameName = async () => {
-  //   if (members) {
-  //     for (const member of members) {
-  //       const sameNames = members.filter((m) => m.name === member.name);
-  //       if (sameNames.length > 1) {
-  //         console.log("Duplicate member:", member.name);
-  //         const chosenPerson = sameNames.reduce((max, current) =>
-  //           (current.metadata?.length ?? 0) > (max.metadata?.length ?? 0)
-  //             ? current
-  //             : max
-  //         );
-  //         const others = sameNames.filter((m) => m.id !== chosenPerson.id);
+  const combineSameName = async () => {
+    if (members) {
+      for (const member of members) {
+        const sameNames = members.filter((m) => m.name === member.name);
+        if (sameNames.length > 1) {
+          console.log("Duplicate member:", member.name);
+          const emailChosenPerson = sameNames.find((m) =>
+            m.email?.endsWith("sowaustralia.com")
+          );
+          const chosenPerson =
+            emailChosenPerson ??
+            sameNames.reduce((max, current) =>
+              (current.metadata?.length ?? 0) > (max.metadata?.length ?? 0)
+                ? current
+                : max
+            );
+          const others = sameNames.filter(
+            (m) => m.docRef.path !== chosenPerson.docRef.path
+          );
 
-  //         console.log(
-  //           "Others:",
-  //           sameNames.map((sn) => sn.id)
-  //         );
-  //         console.log("Chosen:", chosenPerson.id);
+          console.log(
+            "Others:",
+            sameNames.map((sn) => sn.id)
+          );
+          console.log("Chosen:", chosenPerson.id);
 
-  //         for (const other of others) {
-  //           for (const groupId of [
-  //             "ccSgQTXvLRnin0OjwvRM",
-  //             "CZHRnKJ8SDnfMIw64WJu",
-  //             "MUSmSaufEfgdJUX4Kx4G",
-  //             "wrsDV3XfwQB4RD7BxKD2",
-  //             "T4qzZ5X3pGqJgJ8CMOtk",
-  //           ] as GroupId[]) {
-  //             const events = await getDocs(
-  //               collection(firestore, "groups", groupId, "events")
-  //             );
-  //             for (const e of events.docs) {
-  //               console.log(
-  //                 "Updating Event Doc for member: ",
-  //                 chosenPerson.name,
-  //                 e.data().name
-  //               );
-  //               await updateDoc(
-  //                 doc(firestore, "groups", groupId, "events", e.id),
-  //                 {
-  //                   members: replaceMember(
-  //                     other.docRef ??
-  //                       convertMemberIdToReference(groupId, other.id),
-  //                     chosenPerson.docRef ??
-  //                       convertMemberIdToReference(groupId, chosenPerson.id),
-  //                     e.data().members
-  //                   ),
-  //                 }
-  //               );
-  //             }
-  //           }
-  //           await deleteDoc(
-  //             other.docRef ??
-  //               convertMemberIdToReference("ccSgQTXvLRnin0OjwvRM", other.id)
-  //           );
-  //         }
-  //       }
-  //     }
-  //   }
-  //   console.log("done");
-  // };
+          for (const other of others) {
+            for (const groupId of [
+              "ccSgQTXvLRnin0OjwvRM",
+              "CZHRnKJ8SDnfMIw64WJu",
+              "MUSmSaufEfgdJUX4Kx4G",
+              "wrsDV3XfwQB4RD7BxKD2",
+              "T4qzZ5X3pGqJgJ8CMOtk",
+            ] as GroupId[]) {
+              const events = await getDocs(
+                collection(firestore, "groups", groupId, "events")
+              );
+              for (const e of events.docs) {
+                await updateDoc(
+                  doc(firestore, "groups", groupId, "events", e.id),
+                  {
+                    members: replaceMember(
+                      other.docRef ??
+                        convertMemberIdToReference(groupId, other.id),
+                      chosenPerson.docRef ??
+                        convertMemberIdToReference(groupId, chosenPerson.id),
+                      e.data().members
+                    ),
+                  }
+                );
+              }
+            }
+            await deleteDoc(
+              other.docRef ??
+                convertMemberIdToReference("ccSgQTXvLRnin0OjwvRM", other.id)
+            );
+          }
+          console.log("Done with:", member.name);
+        }
+      }
+    }
+    console.log("done");
+  };
 
   // const move = async (groupId: string, otherUnisList: string[]) => {
   //   console.log("start", groupId);
@@ -390,14 +463,21 @@ export default function GroupAdmin() {
           >
             Move SOW
           </button> */}
-          {/* <button
+          <button
             type="button"
             className="p-2 bg-slate-200"
             onClick={() => combineSameName()}
           >
             Combine Same Name
-          </button> */}
+          </button>
           <button
+            type="button"
+            className="p-2 bg-slate-200"
+            onClick={() => membersOfThatEventShouldBeThatYear()}
+          >
+            membersOfThatEventShouldBeThatYear
+          </button>
+          {/* <button
             type="button"
             className="p-2 bg-slate-200"
             onClick={() => removeDuplicates()}
@@ -417,7 +497,7 @@ export default function GroupAdmin() {
             onClick={() => removeMembersFromEvent()}
           >
             Remove Members that do not exist
-          </button>
+          </button> */}
         </div>
       </>
     )

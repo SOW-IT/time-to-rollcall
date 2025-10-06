@@ -171,7 +171,10 @@ export default function EditMember({
                         onChange={(e) =>
                           setMember({
                             ...member,
-                            name: e.target.value,
+                            name: e.target.value.replace(
+                              /\b\w/g,
+                              (firstLetter) => firstLetter.toUpperCase()
+                            ),
                           })
                         }
                       />

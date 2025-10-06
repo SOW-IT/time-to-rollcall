@@ -56,6 +56,8 @@ export const currentYearStr = new Date().getFullYear().toString();
 export const currentSOWYear =
   new Date().getMonth() >= 9 ? currentYear + 1 : currentYear;
 export const currentSOWYearStr = currentSOWYear.toString();
+export const getSOWYear = (date: Date) =>
+  date.getMonth() >= 9 ? date.getFullYear() + 1 : date.getFullYear();
 
 export const allowedYears = () => {
   let years = [];

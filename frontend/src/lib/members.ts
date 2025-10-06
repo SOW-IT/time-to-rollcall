@@ -2,6 +2,7 @@ import { currentSOWYearStr } from "@/helper/Time";
 import { convertToFirestore, firestore } from "@/lib/firebase";
 import { GroupId } from "@/models/Group";
 import { MemberId, MemberModel } from "@/models/Member";
+import { UserId } from "@/models/User";
 import {
   addDoc,
   collection,
@@ -11,7 +12,11 @@ import {
   setDoc,
 } from "firebase/firestore";
 
-export async function createMember(groupId: GroupId, member: MemberModel) {
+export async function createMember(
+  groupId: GroupId,
+  member: MemberModel,
+  userId?: UserId
+) {
   const ref = await addDoc(
     collection(
       firestore,
@@ -21,9 +26,9 @@ export async function createMember(groupId: GroupId, member: MemberModel) {
       currentSOWYearStr,
       "members"
     ),
-    convertMemberToDocument(member)
+    convertMemberToDocument(member, userId)
   );
-  return { ...member, id: ref.id } as MemberModel;
+  return { ...member, id: ref.id, docRef: ref } as MemberModel;
 }
 
 export async function updateMember(
@@ -40,10 +45,14 @@ export async function deleteMember(docRef?: DocumentReference) {
   await deleteDoc(docRef);
 }
 
-function convertMemberToDocument(member: MemberModel) {
+function convertMemberToDocument(member: MemberModel, userId?: UserId) {
   const { metadata, ...memberWithoutId } = member;
   if (metadata) {
-    return { ...convertToFirestore(memberWithoutId), metadata };
+    return {
+      ...convertToFirestore(memberWithoutId),
+      metadata,
+      createdBy: userId,
+    };
   }
   return convertToFirestore(memberWithoutId);
 }

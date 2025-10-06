@@ -10,7 +10,12 @@ import EditMember from "@/components/members/EditMember";
 import Members from "@/components/members/Members";
 import { currentYearStr } from "@/helper/Time";
 import { promiseToast } from "@/helper/Toast";
-import { GroupContext, MembersContext, MetadataContext } from "@/lib/context";
+import {
+  GroupContext,
+  MembersContext,
+  MetadataContext,
+  UserContext,
+} from "@/lib/context";
 import { createMember, deleteMember, updateMember } from "@/lib/members";
 import { GroupId } from "@/models/Group";
 import { InitMember, MemberModel } from "@/models/Member";
@@ -29,6 +34,7 @@ export default function GroupMember({
   const [searchInput, setSearchInput] = useState<string>("");
   const members = useContext(MembersContext);
   const group = useContext(GroupContext);
+  const user = useContext(UserContext);
   const metadata = useContext(MetadataContext);
   const [selectedMember, setSelectedMember] = useState<MemberModel>(
     InitMember("")
@@ -234,7 +240,8 @@ export default function GroupMember({
                   campus.values[selectedMember.metadata[campus.id]]
                 ] ?? params.groupId
               : params.groupId,
-            selectedMember
+            selectedMember,
+            user?.id
           ),
           "Creating Member...",
           "Member Created!",

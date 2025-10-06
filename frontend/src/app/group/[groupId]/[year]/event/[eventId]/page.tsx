@@ -10,13 +10,14 @@ import AttendanceFilterBar, {
 import AttendanceFilterDrawer from "@/components/event/AttendanceFilterDrawer";
 import LiveBadge from "@/components/event/LiveBadge";
 import EditMember from "@/components/members/EditMember";
-import { currentYearStr, inBetween } from "@/helper/Time";
+import { currentYearStr, getSOWYear, inBetween } from "@/helper/Time";
 import { promiseToast } from "@/helper/Toast";
 import {
   EventContext,
   GroupContext,
   MembersContext,
   MetadataContext,
+  UserContext,
 } from "@/lib/context";
 import {
   addMemberToEvent,
@@ -35,6 +36,7 @@ import Draggable from "gsap/dist/Draggable";
 import { useContext, useEffect, useState, useMemo } from "react";
 
 import { FunnelIcon } from "@heroicons/react/24/outline";
+import { useMembersListener } from "@/lib/hooks";
 
 gsap.registerPlugin(Draggable, useGSAP);
 
@@ -49,9 +51,13 @@ export default function Event({
   const [searchActive, setSearchActive] = useState(false);
   const [searchInput, setSearchInput] = useState<string>("");
   const metadata = useContext(MetadataContext);
-  const group = useContext(GroupContext);
   const event = useContext(EventContext);
-  const members = useContext(MembersContext);
+  const group = useContext(GroupContext);
+  const user = useContext(UserContext);
+  const sowYearStr = event ? getSOWYear(event.dateStart).toString() : undefined;
+  const members = sowYearStr
+    ? useMembersListener(user, sowYearStr, groupId)
+    : useContext(MembersContext);
   const [loading, setLoading] = useState(true);
   const [membersNotSignedIn, setMembersNotSignedIn] = useState<MemberModel[]>(
     []
@@ -89,15 +95,6 @@ export default function Event({
   const dietaryRequirements = metadata?.find(
     (m) => m.key === "Dietary Requirements" && m.type === "select"
   ) as MetadataSelectModel | undefined;
-
-  useEffect(() => {
-    // Update the time every minute
-    const intervalId = setInterval(() => {
-      setTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, []);
 
   function closeModal() {
     setIsOpen(false);
@@ -374,7 +371,7 @@ export default function Event({
         event?.members
       ) {
         const index = event.members.findIndex(
-          (m) => m.member.docRef === selectedMemberInfo.member.docRef
+          (m) => m.member.docRef.path === selectedMemberInfo.member.docRef.path
         );
         if (index !== -1) {
           await promiseToast<void>(
@@ -395,6 +392,15 @@ export default function Event({
   }
 
   useEffect(() => {
+    // Update the time every minute
+    const intervalId = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
     if (event && members !== null) {
       let membersNotSignedIn =
         members
@@ -402,7 +408,7 @@ export default function Event({
           .filter(
             (m) =>
               !event?.members?.some(
-                (signedIn) => signedIn.member.docRef === m.docRef
+                (signedIn) => signedIn.member.docRef.path === m.docRef.path
               )
           ) ?? [];
       let membersSignedIn =
@@ -410,7 +416,9 @@ export default function Event({
           ?.sort((a, b) => a.member.name.localeCompare(b.member.name))
           .map((mi) => ({
             ...mi,
-            member: members?.find((m) => m.docRef === mi.member.docRef),
+            member: members?.find(
+              (m) => m.docRef.path === mi.member.docRef.path
+            ),
           }))
           .filter((mi) => mi.member !== undefined) as MemberInformation[]) ??
         [];
@@ -446,7 +454,8 @@ export default function Event({
     if (params.groupId && event && selectedMemberInfo.member) {
       if (
         membersSignedIn.find(
-          (msi) => msi.member.docRef === selectedMemberInfo.member.docRef
+          (msi) =>
+            msi.member.docRef.path === selectedMemberInfo.member.docRef.path
         )
       ) {
         await promiseToast<void>(
@@ -454,7 +463,8 @@ export default function Event({
             groupId,
             eventId,
             event.members?.find(
-              (m) => m.member.docRef === selectedMemberInfo.member.docRef
+              (m) =>
+                m.member.docRef.path === selectedMemberInfo.member.docRef.path
             )
           ),
           `Removing ${selectedMemberInfo.member.name}...`,
@@ -585,7 +595,7 @@ export default function Event({
                   const { member } = memberInfo;
                   promiseToast<void>(
                     event.members?.some(
-                      (m) => m.member.docRef === member.docRef
+                      (m) => m.member.docRef.path === member.docRef.path
                     )
                       ? (() => {
                           throw new Error(
@@ -658,7 +668,7 @@ export default function Event({
                       groupId,
                       eventId,
                       event.members?.find(
-                        (m) => m.member.docRef === member.docRef
+                        (m) => m.member.docRef.path === member.docRef.path
                       )
                     ),
                     `Removing ${member.name}...`,
