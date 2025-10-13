@@ -14,7 +14,7 @@ export const MemberCardMemo: FC<MemberCardProps> = memo(
   },
   (prevProps, nextProps) => {
     return (
-      prevProps.member.id === nextProps.member.id &&
+      prevProps.member.docRef.path === nextProps.member.docRef.path &&
       prevProps.member.name === nextProps.member.name &&
       prevProps.member.metadata === nextProps.member.metadata
     );
