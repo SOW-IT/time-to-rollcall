@@ -172,6 +172,61 @@ export default function GroupAdmin() {
     return Array.from(seen.values());
   };
 
+  const assignMembers = async () => {
+    const event = await getDoc(
+      doc(
+        firestore,
+        "groups",
+        "T4qzZ5X3pGqJgJ8CMOtk",
+        "events",
+        "J5mblNwKgESvVW2nNk9v"
+      )
+    );
+    const d = event.data();
+    const newMembers = [];
+    for (const m of d?.members ?? []) {
+      let filled = false;
+      for (const groupId of [
+        "ccSgQTXvLRnin0OjwvRM",
+        "CZHRnKJ8SDnfMIw64WJu",
+        "MUSmSaufEfgdJUX4Kx4G",
+        "wrsDV3XfwQB4RD7BxKD2",
+        "T4qzZ5X3pGqJgJ8CMOtk",
+      ]) {
+        const member = await getDoc(
+          doc(
+            firestore,
+            "groups",
+            groupId,
+            "members",
+            "2026",
+            "members",
+            (m.member as DocumentReference).id
+          )
+        );
+        if (member.exists()) {
+          console.log("Assigning " + member.ref);
+          newMembers.push({ ...m, member: member.ref });
+          filled = true;
+          break;
+        }
+      }
+      if (!filled) {
+        console.log(m, "doesn't exist");
+      }
+    }
+    await updateDoc(
+      doc(
+        firestore,
+        "groups",
+        "T4qzZ5X3pGqJgJ8CMOtk",
+        "events",
+        "J5mblNwKgESvVW2nNk9v"
+      ),
+      { ...d, members: newMembers }
+    );
+  };
+
   // THIS IS DANGEROUS!
   const combineSameName = async () => {
     if (members) {
@@ -476,6 +531,13 @@ export default function GroupAdmin() {
             onClick={() => membersOfThatEventShouldBeThatYear()}
           >
             membersOfThatEventShouldBeThatYear
+          </button>
+          <button
+            type="button"
+            className="p-2 bg-slate-200"
+            onClick={() => assignMembers()}
+          >
+            assignMembers
           </button>
           {/* <button
             type="button"

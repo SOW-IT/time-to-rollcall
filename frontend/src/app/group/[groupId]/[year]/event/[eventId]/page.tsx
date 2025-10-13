@@ -650,14 +650,6 @@ export default function Event({
                     </span>
                   </div>
                 }
-                dietary={() =>
-                  dietaryRequirements &&
-                  setMembersSignedIn((msi) =>
-                    msi.sort((a, _) =>
-                      a.member.metadata?.[dietaryRequirements.id] ? -1 : 1
-                    )
-                  )
-                }
                 totalAttendance={event.members?.length ?? 0}
                 action={(memberInfo: MemberInformation) => {
                   const { member } = memberInfo;

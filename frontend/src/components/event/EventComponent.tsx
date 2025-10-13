@@ -3,7 +3,12 @@ import { hoursAndMinutes, inBetween, sameDay, toddMMYYYY } from "@/helper/Time";
 import LiveBadge from "./LiveBadge";
 import Tag from "./Tag";
 import { useState, useEffect } from "react";
-import { University } from "@/models/University";
+import {
+  getUniversityKey,
+  University,
+  universityColours,
+  universityNames,
+} from "@/models/University";
 import GroupBadge from "./GroupBadge";
 
 export default function EventComponent({
@@ -20,6 +25,13 @@ export default function EventComponent({
   showButton?: boolean;
 }) {
   const [time, setTime] = useState(new Date());
+
+  const hexToRgb = (hex: string) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `${r}, ${g}, ${b}`;
+  };
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -50,11 +62,38 @@ export default function EventComponent({
           {after && <p className="text-xs font-medium text-gray-600">ENDED</p>}
         </div>
       </div>
-      {collabUnis && (
-        <div className="flex mt-3">
-          {collabUnis.map((cu, i) => (
-            <GroupBadge key={i} className="px-4 mr-2" campus={cu} />
-          ))}
+      {collabUnis && collabUnis.length > 0 && (
+        <div className="flex flex-wrap mt-1">
+          <div className="flex w-full -mb-1 ml-4">
+            <p
+              className="text-xs font-extrabold"
+              style={{
+                color: `rgba(${hexToRgb(
+                  universityColours[
+                    universityNames[event.groupId ?? University.UTS]
+                  ]
+                )}, 0.5)`,
+              }}
+            >
+              {getUniversityKey(
+                universityNames[event.groupId ?? University.UTS]
+              )}
+            </p>
+          </div>
+          <div
+            className="flex flex-wrap gap-2 rounded-full py-1 px-1"
+            style={{
+              backgroundColor: `rgba(${hexToRgb(
+                universityColours[
+                  universityNames[event.groupId ?? University.UTS]
+                ]
+              )}, 0.5)`,
+            }}
+          >
+            {collabUnis.slice(1).map((cu, i) => (
+              <GroupBadge key={i} className="px-4" campus={cu} />
+            ))}
+          </div>
         </div>
       )}
       <div className="pt-3 pb-6">

@@ -14,7 +14,7 @@ import { deleteEvent, submitEvent, updateEvent } from "@/lib/events";
 import { EventModel, InitEvent } from "@/models/Event";
 import { GroupId } from "@/models/Group";
 import { TagId } from "@/models/Tag";
-import { universityColours, universityNames } from "@/models/University";
+import { universityNames } from "@/models/University";
 import {
   Listbox,
   ListboxButton,
@@ -246,16 +246,7 @@ export default function Group({
           </div>
           {group &&
             showedEvents.map((event, i) => (
-              <div
-                key={i}
-                style={{
-                  backgroundColor: event.groupId
-                    ? `rgba(${hexToRgb(
-                        universityColours[universityNames[event.groupId]]
-                      )}, 0.2)` // 0.3 for light opacity
-                    : "",
-                }}
-              >
+              <div key={i}>
                 <hr className="h-[1px] border-t-0 bg-neutral-300" />
                 <div
                   className="cursor-pointer px-4 py-6"
@@ -272,13 +263,14 @@ export default function Group({
                   <EventComponent
                     collabUnis={
                       event.collaboration
-                        ? event.collaboration
-                            .map((gId) => universityNames[gId])
-                            .concat(
-                              event.groupId
-                                ? [universityNames[event.groupId]]
-                                : []
+                        ? (event.groupId
+                            ? [universityNames[event.groupId]]
+                            : []
+                          ).concat(
+                            event.collaboration.map(
+                              (gId) => universityNames[gId]
                             )
+                          )
                         : []
                     }
                     event={event}

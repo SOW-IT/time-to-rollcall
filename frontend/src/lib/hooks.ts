@@ -300,6 +300,10 @@ export function useEventsListener(
     where("collaboration", "array-contains", groupId)
   );
   return events
+    ?.map((e) => ({
+      ...e,
+      groupId: e.collaboration ? groupId : undefined,
+    }))
     ?.concat(
       events1?.map((e) => ({
         ...e,

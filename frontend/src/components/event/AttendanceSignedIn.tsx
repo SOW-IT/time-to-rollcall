@@ -8,7 +8,6 @@ import useMediaQuery from "@/helper/useMediaQuery";
 interface AttendanceSignedInProps {
   disabled: boolean;
   signedIn?: MemberInformation[];
-  dietary: () => void;
   totalAttendance: number;
   filteredCount?: number;
   mobileFilterButton?: React.ReactNode;
@@ -19,7 +18,6 @@ interface AttendanceSignedInProps {
 export default function AttendanceSignedIn({
   disabled,
   signedIn,
-  dietary,
   totalAttendance,
   filteredCount,
   mobileFilterButton,
@@ -47,9 +45,6 @@ export default function AttendanceSignedIn({
       <div className="flex items-center mx-4 mb-2 gap-2">
         <p className="text-gray-500 text-[10px] font-light align-middle">
           SIGNED IN
-        </p>
-        <p className="cursor-pointer" onClick={() => dietary()}>
-          Dietary
         </p>
         <div className="ml-auto flex items-center gap-2">
           {/* Performance indicator */}
