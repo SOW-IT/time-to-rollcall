@@ -8,7 +8,7 @@ import {
   UserContext,
 } from "@/lib/context";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import {
   UserGroupIcon,
@@ -43,13 +43,16 @@ import { currentYearStr } from "@/helper/Time";
 
 export default function Topbar({
   year,
+  groupId,
   toggleEdit,
   setToggleEdit,
 }: {
   year?: string;
+  groupId?: string;
   toggleEdit?: boolean;
   setToggleEdit?: (toggleEdit: boolean) => void;
 }) {
+  const fromGroupId = useSearchParams().get("fromGroupId");
   const pathname = usePathname();
   const router = useRouter();
   const user = useContext(UserContext);
@@ -313,7 +316,7 @@ export default function Topbar({
                 )}
               </>
             )}
-            {!disabled && (
+            {!disabled && group?.id === groupId && (
               <Cog6ToothIcon
                 className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={openModal}
@@ -358,7 +361,7 @@ export default function Topbar({
                 }
               />
             )}
-            {!disabled && (
+            {!disabled && group?.id === groupId && (
               <Cog6ToothIcon
                 className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={

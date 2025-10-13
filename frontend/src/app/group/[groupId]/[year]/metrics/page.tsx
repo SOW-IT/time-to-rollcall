@@ -97,7 +97,7 @@ export default function Metrics({
 
   return (
     <>
-      <Topbar year={params.year} />
+      <Topbar groupId={params.groupId} year={params.year} />
       <div className="mx-4">
         <div className="flex justify-between items-center mt-3 mb-10">
           <h1 className="text-2xl">Metrics</h1>

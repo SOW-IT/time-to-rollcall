@@ -149,17 +149,10 @@ export default function Group({
       ? allowedYears().slice(0, -1)
       : allowedYears();
 
-  const hexToRgb = (hex: string) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `${r}, ${g}, ${b}`;
-  };
-
   const disabled = currentYearStr !== params.year;
   return (
     <>
-      <Topbar year={params.year} />
+      <Topbar groupId={params.groupId} year={params.year} />
       {loading ? (
         <div className="flex justify-center items-center my-24">
           <Loader show />
@@ -255,7 +248,9 @@ export default function Group({
                       `${Path.Group}/${event.groupId ?? group.id}/${
                         params.year
                       }/event/${event.id}${
-                        event.groupId ? "?fromGroupId=" + group.id : ""
+                        event.groupId !== group.id
+                          ? "?fromGroupId=" + group.id
+                          : ""
                       }`
                     )
                   }

@@ -148,6 +148,9 @@ export default function EditMember({
                   </DialogTitle>
                   <div className="overflow-auto max-h-[70vh] pb-14 px-4">
                     <div className="my-4">
+                      <p className="text-xs text-gray-500">
+                        {member.docRef.path}
+                      </p>
                       <p className="text-sm text-gray-900">
                         Name
                         {!updating &&

@@ -24,7 +24,7 @@ import { universityIds } from "@/models/University";
 import { useContext, useEffect, useState, useMemo } from "react";
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { QuestionMarkCircleIcon } from "@heroicons/react/16/solid";
-import { isFuzzyNameMatch } from "@/helper/searchQuery";
+import { searchNamesPhonetically } from "@/helper/searchQuery";
 
 export default function GroupMember({
   params,
@@ -82,7 +82,7 @@ export default function GroupMember({
     query: string
   ): MemberModel[] => {
     if (!query || query.length === 0) return data;
-    return data.filter((member) => isFuzzyNameMatch(query, member.name));
+    return data.filter((member) => searchNamesPhonetically(query, member.name));
   };
 
   // Filter and sort logic functions
@@ -301,7 +301,7 @@ export default function GroupMember({
   }
   return (
     <>
-      <Topbar year={params.year} />
+      <Topbar groupId={params.groupId} year={params.year} />
       {!disabled && (
         <EditMember
           isOpen={isOpen}

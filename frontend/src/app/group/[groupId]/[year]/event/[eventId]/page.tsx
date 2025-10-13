@@ -36,11 +36,9 @@ import { useContext, useEffect, useState, useMemo } from "react";
 
 import { FunnelIcon } from "@heroicons/react/24/outline";
 import { useMembersListener } from "@/lib/hooks";
-import { isFuzzyNameMatch } from "@/helper/searchQuery";
+import { searchNamesPhonetically } from "@/helper/searchQuery";
 
 gsap.registerPlugin(Draggable, useGSAP);
-
-const MAX_INDEX = 10;
 
 export default function Event({
   params,
@@ -187,7 +185,7 @@ export default function Event({
     query: string
   ): MemberModel[] => {
     if (!query || query.length === 0) return data;
-    return data.filter((member) => isFuzzyNameMatch(query, member.name));
+    return data.filter((member) => searchNamesPhonetically(query, member.name));
   };
 
   // Apply search filter by name for MemberInformation[] (signed in)
@@ -197,7 +195,7 @@ export default function Event({
   ): MemberInformation[] => {
     if (!query || query.length === 0) return data;
     return data.filter((memberInfo) =>
-      isFuzzyNameMatch(query, memberInfo.member.name)
+      searchNamesPhonetically(query, memberInfo.member.name)
     );
   };
 
@@ -346,7 +344,8 @@ export default function Event({
               campus.values[selectedMemberInfo.member.metadata[campus.id]]
             ] ?? params.groupId
           : params.groupId,
-        selectedMemberInfo.member
+        selectedMemberInfo.member,
+        user?.id
       );
       await promiseToast<void>(
         addMemberToEvent(groupId, eventId, newMember.docRef),
@@ -503,6 +502,7 @@ export default function Event({
       )}
       <Topbar
         year={year}
+        groupId={params.groupId}
         setToggleEdit={
           event && time > event.dateEnd ? setToggleEdit : undefined
         }

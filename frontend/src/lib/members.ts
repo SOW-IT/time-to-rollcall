@@ -28,7 +28,12 @@ export async function createMember(
     ),
     convertMemberToDocument(member, userId)
   );
-  return { ...member, id: ref.id, docRef: ref } as MemberModel;
+  return {
+    ...member,
+    createdBy: userId,
+    id: ref.id,
+    docRef: ref,
+  } as MemberModel;
 }
 
 export async function updateMember(
@@ -47,7 +52,7 @@ export async function deleteMember(docRef?: DocumentReference) {
 
 function convertMemberToDocument(member: MemberModel, userId?: UserId) {
   const { metadata, ...memberWithoutId } = member;
-  if (metadata) {
+  if (metadata || userId) {
     return {
       ...convertToFirestore(memberWithoutId),
       metadata,
