@@ -8,7 +8,7 @@ import {
   UserContext,
 } from "@/lib/context";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import {
   UserGroupIcon,
@@ -52,7 +52,6 @@ export default function Topbar({
   toggleEdit?: boolean;
   setToggleEdit?: (toggleEdit: boolean) => void;
 }) {
-  const fromGroupId = useSearchParams().get("fromGroupId");
   const pathname = usePathname();
   const router = useRouter();
   const user = useContext(UserContext);

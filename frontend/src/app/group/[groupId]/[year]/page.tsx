@@ -248,7 +248,7 @@ export default function Group({
                       `${Path.Group}/${event.groupId ?? group.id}/${
                         params.year
                       }/event/${event.id}${
-                        event.groupId !== group.id
+                        event.groupId && event.groupId !== group.id
                           ? "?fromGroupId=" + group.id
                           : ""
                       }`
