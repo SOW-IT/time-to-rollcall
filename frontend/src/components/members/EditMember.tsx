@@ -95,10 +95,10 @@ export default function EditMember({
         closeMergeMemberModal &&
         updatingDelete !== undefined && (
           <MergeMember
-            name={member.name}
             isOpen={mergeMemberIsOpen}
             closeModal={closeMergeMemberModal}
             members={availableMembersToMerge}
+            primaryMember={member}
           />
         )}
 
