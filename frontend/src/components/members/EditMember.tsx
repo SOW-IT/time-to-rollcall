@@ -16,12 +16,14 @@ import {
   ChevronUpIcon,
   TrashIcon,
   XMarkIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 import Loader from "../Loader";
 import { MembersContext, MetadataContext } from "@/lib/context";
 import DeleteConfirmation from "../DeleteConfirmation";
 import { MetadataSelectModel } from "@/models/Metadata";
 import { convertToDateTimeLocalString } from "@/helper/Time";
+import MergeMember from "./MergeMember";
 
 export default function EditMember({
   isOpen,
@@ -33,6 +35,9 @@ export default function EditMember({
   deleteConfirmationIsOpen,
   openDeleteConfirmationModal,
   closeDeleteConfirmationModal,
+  mergeMemberIsOpen,
+  openMergeMemberModal,
+  closeMergeMemberModal,
   deleteMember,
   updatingDelete,
   signInTime,
@@ -47,6 +52,9 @@ export default function EditMember({
   deleteConfirmationIsOpen?: boolean;
   openDeleteConfirmationModal?: () => void;
   closeDeleteConfirmationModal?: () => void;
+  mergeMemberIsOpen?: boolean;
+  openMergeMemberModal?: () => void;
+  closeMergeMemberModal?: () => void;
   deleteMember?: () => void;
   updatingDelete?: boolean;
   signInTime?: Date;
@@ -55,6 +63,8 @@ export default function EditMember({
   const members = useContext(MembersContext);
   const metadata = useContext(MetadataContext);
   const newMember = member.id === "placeholder";
+  const availableMembersToMerge =
+    members?.filter((m) => m.id !== member.id) ?? [];
   const [confirmationIsOpen, setConfirmationIsOpen] = useState(false);
   function closeConfirmationModal() {
     setConfirmationIsOpen(false);
@@ -81,6 +91,17 @@ export default function EditMember({
             updating={updatingDelete}
           />
         )}
+      {mergeMemberIsOpen !== undefined &&
+        closeMergeMemberModal &&
+        updatingDelete !== undefined && (
+          <MergeMember
+            name={member.name}
+            isOpen={mergeMemberIsOpen}
+            closeModal={closeMergeMemberModal}
+            members={availableMembersToMerge}
+          />
+        )}
+
       {newMember && (
         <DeleteConfirmation
           description={
@@ -133,12 +154,20 @@ export default function EditMember({
                     <XMarkIcon className="w-6 h-6 text-gray-600 hover:text-black active:text-black" />
                   </div>
                   {!newMember && (
-                    <div
-                      className="absolute left-2 top-2 p-2 cursor-pointer"
-                      onClick={openDeleteConfirmationModal}
-                    >
-                      <TrashIcon className="w-6 h-6 text-red-600 hover:text-red-800 active:text-red-800" />
-                    </div>
+                    <>
+                      <div
+                        className="absolute left-2 top-2 p-2 cursor-pointer"
+                        onClick={openDeleteConfirmationModal}
+                      >
+                        <TrashIcon className="w-6 h-6 text-red-600 hover:text-red-800 active:text-red-800" />
+                      </div>
+                      <div
+                        className="absolute left-12 top-2 p-2 cursor-pointer"
+                        onClick={openMergeMemberModal}
+                      >
+                        <UserPlusIcon className="w-6 h-6 text-blue-600 hover:text-red-800 active:text-red-800" />
+                      </div>
+                    </>
                   )}
                   <DialogTitle
                     as="h3"
