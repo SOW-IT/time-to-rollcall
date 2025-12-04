@@ -19,7 +19,16 @@ import {
 import { MemberModel } from "@/models/Member";
 import { MetadataContext } from "@/lib/context";
 import { MetadataSelectModel } from "@/models/Metadata";
-import { updateMember } from "@/lib/members";
+import { updateMember, deleteMember } from "@/lib/members";
+import {
+  collection,
+  DocumentReference,
+  getDocs,
+  Timestamp,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
 
 export default function MergeMember({
   isOpen,
@@ -135,12 +144,95 @@ export default function MergeMember({
           }
         }
       });
+      // Merge not confictfields from selected member
+      if (selectedMember.metadata && metadata) {
+        if (!mergedMember.metadata) mergedMember.metadata = {};
+
+        metadata.forEach((m) => {
+          const primaryValue = primaryMember.metadata?.[m.id];
+          const selectedValue = selectedMember.metadata?.[m.id];
+
+          // If primary is empty but selected has a value, use selected value
+          if (!primaryValue && selectedValue && mergedMember.metadata) {
+            mergedMember.metadata[m.id] = selectedValue;
+          }
+        });
+      }
+
+      // Merge email if primary is empty but selected has one
+      if (!mergedMember.email && selectedMember.email) {
+        mergedMember.email = selectedMember.email;
+      }
       // update primary information
       updateMember(primaryMember.docRef, mergedMember);
 
-      // TODO: merge attendance for event
+      const replaceDuplicateMembers = (
+        members?: { member: DocumentReference; signInTime: Timestamp }[],
+        primaryMember?: DocumentReference,
+        secondaryMember?: DocumentReference
+      ) => {
+        if (!members || members.length === 0) return [];
+        if (!primaryMember || !secondaryMember) return members;
 
-      //TODO: delete secondary event
+        const primaryPath = primaryMember.path;
+        const secondaryPath = secondaryMember.path;
+
+        const hasPrimary = members.some((m) => m.member.path === primaryPath);
+        const hasSecondary = members.some(
+          (m) => m.member.path === secondaryPath
+        );
+
+        // Remove secondary member from the list
+        let filtered = members.filter((m) => m.member.path !== secondaryPath);
+
+        // If only secondary was present (not primary), add primary member
+        if (hasSecondary && !hasPrimary) {
+          // Use the secondary's sign-in time for the primary member
+          const secondaryEntry = members.find(
+            (m) => m.member.path === secondaryPath
+          );
+          filtered.push({
+            member: primaryMember,
+            signInTime: secondaryEntry?.signInTime || Timestamp.now(),
+          });
+        }
+
+        return filtered;
+      };
+
+      const replacePrimarySecondary = async (
+        primaryMember: DocumentReference,
+        secondaryMember: DocumentReference
+      ) => {
+        for (const groupId of [
+          // "ccSgQTXvLRnin0OjwvRM",
+          // "CZHRnKJ8SDnfMIw64WJu",
+          // "MUSmSaufEfgdJUX4Kx4G",
+          // "wrsDV3XfwQB4RD7BxKD2",
+          "bhaiAKXThkH9GbxpjZrd",
+        ]) {
+          const events = await getDocs(
+            collection(firestore, "groups", groupId, "events")
+          );
+
+          for (const e of events.docs) {
+            // For each event, replaces secondary member with primary member
+            await updateDoc(doc(firestore, "groups", groupId, "events", e.id), {
+              members: replaceDuplicateMembers(
+                e.data().members,
+                primaryMember,
+                secondaryMember
+              ),
+            });
+          }
+        }
+      };
+      await replacePrimarySecondary(
+        primaryMember.docRef,
+        selectedMember.docRef
+      );
+
+      deleteMember(selectedMember.docRef);
     } catch (error) {
       console.error("Error merging member:", error);
     } finally {
