@@ -187,7 +187,7 @@ export default function Group({
             />
           )}
           <div className="flex justify-between mx-4 mt-3">
-            <h1 className="text-2xl">Events</h1>
+            <h1 className="text-2xl">Christian Lee</h1>
             <button
               type="button"
               onClick={openExportModal}
