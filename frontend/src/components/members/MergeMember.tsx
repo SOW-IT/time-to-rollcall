@@ -100,7 +100,7 @@ export default function MergeMember({
     const conflicts = detectConflicts();
 
     if (conflicts.length > 0) {
-      // Initialize conflict resolutions to primary by default
+      // Initialise conflict resolutions to primary by default
       const initialResolutions: { [key: string]: "primary" | "selected" } = {};
       conflicts.forEach((conflict) => {
         initialResolutions[conflict.field] = "primary";
@@ -163,7 +163,7 @@ export default function MergeMember({
       if (!mergedMember.email && selectedMember.email) {
         mergedMember.email = selectedMember.email;
       }
-      // update primary information
+      // Update primary information
       updateMember(primaryMember.docRef, mergedMember);
 
       const replaceDuplicateMembers = (
@@ -205,11 +205,11 @@ export default function MergeMember({
         secondaryMember: DocumentReference
       ) => {
         for (const groupId of [
-          // "ccSgQTXvLRnin0OjwvRM",
-          // "CZHRnKJ8SDnfMIw64WJu",
-          // "MUSmSaufEfgdJUX4Kx4G",
-          // "wrsDV3XfwQB4RD7BxKD2",
-          "bhaiAKXThkH9GbxpjZrd",
+          "ccSgQTXvLRnin0OjwvRM", // UNSW
+          "CZHRnKJ8SDnfMIw64WJu", // MCQ
+          "MUSmSaufEfgdJUX4Kx4G", // USYD
+          "wrsDV3XfwQB4RD7BxKD2", // UTS
+          "bhaiAKXThkH9GbxpjZrd", // test group
         ]) {
           const events = await getDocs(
             collection(firestore, "groups", groupId, "events")
@@ -242,7 +242,7 @@ export default function MergeMember({
       setConflictResolutions({});
     }
   };
-  // clear conflicts if back is clicked
+  // Clear conflicts if back arrow is clicked
   const handleBack = () => {
     setShowConflicts(false);
     setConflictResolutions({});
