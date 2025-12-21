@@ -50,6 +50,8 @@ export default function MergeMember({
   const [conflictResolutions, setConflictResolutions] = useState<{
     [key: string]: "primary" | "selected";
   }>({});
+  // Loading: not loading = false
+  const [loading, setLoading] = useState(false);
 
   // When the selected member and primary have conflicting fields
   const detectConflicts = () => {
@@ -97,6 +99,7 @@ export default function MergeMember({
   };
 
   const handleConflict = () => {
+    setLoading(true);
     const conflicts = detectConflicts();
 
     if (conflicts.length > 0) {
@@ -241,12 +244,14 @@ export default function MergeMember({
       setConfirmName("");
       setConflictResolutions({});
       setSelectedMember(null);
+      setLoading(false);
     }
   };
   // Clear conflicts if back arrow is clicked
   const handleBack = () => {
     setShowConflicts(false);
     setConflictResolutions({});
+    setLoading(false);
   };
 
   const getMetadataDisplayValue = (metadataItem: any, value: string) => {
@@ -281,7 +286,7 @@ export default function MergeMember({
           <div className="fixed inset-0 bg-black/25" />
         </TransitionChild>
         <div className="fixed inset-0 flex justify-center">
-          <div className="fixed max-md:w-full md:w-[600px] bottom-0">
+          <div className="fixed w-full md:w-auto md:max-w-[80%] lg:max-w-[900px] bottom-0">
             <TransitionChild
               enter="transition ease-in-out duration-300 transform"
               enterFrom="transform translate-y-full"
@@ -290,7 +295,7 @@ export default function MergeMember({
               leaveFrom="transform translate-y-0"
               leaveTo="transform translate-y-full"
             >
-              <DialogPanel className="rounded-t-3xl bg-white pt-4 pb-0 shadow-xl w-full">
+              <DialogPanel className="rounded-t-3xl bg-white shadow-xl flex flex-col max-h-[90vh] md:max-h-[95vh]">
                 <div
                   className="absolute left-2 top-2 p-2 cursor-pointer"
                   onClick={() => {
@@ -307,7 +312,7 @@ export default function MergeMember({
                 </div>
                 <DialogTitle
                   as="h3"
-                  className="text-xl text-center font-medium leading-6 text-gray-900"
+                  className="text-xl text-center font-medium leading-6 text-gray-900 p-3"
                 >
                   {showConflicts ? "Resolve Conflicts" : "Merge Member"}
                 </DialogTitle>
@@ -355,6 +360,10 @@ export default function MergeMember({
                             leaveTo="opacity-0"
                           >
                             <ListboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                              {/* <ListboxOptions
+                              // anchor="top"
+                              className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                            > */}
                               {members.map((member) => (
                                 <ListboxOption
                                   key={member.id}
@@ -486,11 +495,12 @@ export default function MergeMember({
                         type="button"
                         onClick={handleConflict}
                         disabled={
-                          selectedMember
+                          loading ||
+                          (selectedMember
                             ? confirmName !== selectedMember.name
-                            : true
+                            : true)
                         }
-                        className="rounded-3xl border border-transparent bg-red-600 px-6 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="rounded-3xl border border-transparent bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         {conflicts.length > 0
                           ? "Continue to Conflicts"
@@ -577,7 +587,7 @@ export default function MergeMember({
                       <button
                         type="button"
                         onClick={handleMerge}
-                        className="rounded-3xl border border-transparent bg-red-600 px-6 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 transition-colors"
+                        className="rounded-3xl border border-transparent bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
                       >
                         Complete Merge
                       </button>
