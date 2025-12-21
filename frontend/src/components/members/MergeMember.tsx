@@ -29,6 +29,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { firestore } from "@/lib/firebase";
+import { promiseToast } from "@/helper/Toast";
 
 export default function MergeMember({
   isOpen,
@@ -119,7 +120,7 @@ export default function MergeMember({
   const handleMerge = async () => {
     if (!selectedMember) return;
 
-    try {
+    const mergePromise = async () => {
       const mergedMember = {
         ...primaryMember,
       };
@@ -208,10 +209,10 @@ export default function MergeMember({
         secondaryMember: DocumentReference
       ) => {
         for (const groupId of [
-          "ccSgQTXvLRnin0OjwvRM", // UNSW
-          "CZHRnKJ8SDnfMIw64WJu", // MCQ
-          "MUSmSaufEfgdJUX4Kx4G", // USYD
-          "wrsDV3XfwQB4RD7BxKD2", // UTS
+          // "ccSgQTXvLRnin0OjwvRM", // UNSW
+          // "CZHRnKJ8SDnfMIw64WJu", // MCQ
+          // "MUSmSaufEfgdJUX4Kx4G", // USYD
+          // "wrsDV3XfwQB4RD7BxKD2", // UTS
           "bhaiAKXThkH9GbxpjZrd", // test group
         ]) {
           const events = await getDocs(
@@ -236,6 +237,15 @@ export default function MergeMember({
       );
 
       deleteMember(selectedMember.docRef);
+    };
+
+    try {
+      await promiseToast(
+        mergePromise(),
+        "Merging Members...",
+        "Merged Member!",
+        "Could not merge member."
+      );
     } catch (error) {
       console.error("Error merging member:", error);
     } finally {
@@ -247,6 +257,7 @@ export default function MergeMember({
       setLoading(false);
     }
   };
+
   // Clear conflicts if back arrow is clicked
   const handleBack = () => {
     setShowConflicts(false);
