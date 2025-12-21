@@ -240,6 +240,7 @@ export default function MergeMember({
       setShowConflicts(false);
       setConfirmName("");
       setConflictResolutions({});
+      setSelectedMember(null);
     }
   };
   // Clear conflicts if back arrow is clicked
@@ -289,8 +290,6 @@ export default function MergeMember({
               leaveFrom="transform translate-y-0"
               leaveTo="transform translate-y-full"
             >
-              {/* <DialogPanel className="rounded-t-3xl bg-white p-4 pb-20 shadow-xl overflow-auto max-h-[90vh]">
-               */}
               <DialogPanel className="rounded-t-3xl bg-white pt-4 pb-0 shadow-xl w-full">
                 <div
                   className="absolute left-2 top-2 p-2 cursor-pointer"
@@ -300,6 +299,7 @@ export default function MergeMember({
                     } else {
                       closeModal();
                       setConfirmName("");
+                      setSelectedMember(null);
                     }
                   }}
                 >
