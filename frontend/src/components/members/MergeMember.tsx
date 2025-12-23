@@ -209,10 +209,10 @@ export default function MergeMember({
         secondaryMember: DocumentReference
       ) => {
         for (const groupId of [
-          // "ccSgQTXvLRnin0OjwvRM", // UNSW
-          // "CZHRnKJ8SDnfMIw64WJu", // MCQ
-          // "MUSmSaufEfgdJUX4Kx4G", // USYD
-          // "wrsDV3XfwQB4RD7BxKD2", // UTS
+          "ccSgQTXvLRnin0OjwvRM", // UNSW
+          "CZHRnKJ8SDnfMIw64WJu", // MCQ
+          "MUSmSaufEfgdJUX4Kx4G", // USYD
+          "wrsDV3XfwQB4RD7BxKD2", // UTS
           "bhaiAKXThkH9GbxpjZrd", // test group
         ]) {
           const events = await getDocs(
