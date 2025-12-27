@@ -9,6 +9,7 @@ import {
   ListboxOption,
   ListboxOptions,
 } from "@headlessui/react";
+import Loader from "../Loader";
 import { Fragment, useContext, useState } from "react";
 import {
   ArrowLeftIcon,
@@ -483,21 +484,27 @@ export default function MergeMember({
                   )}
 
                   <div className="flex justify-center fixed bottom-4 left-0 right-0 px-4">
-                    <button
-                      type="button"
-                      onClick={handleConflict}
-                      disabled={
-                        loading ||
-                        (selectedMember
-                          ? confirmName !== selectedMember.name
-                          : true)
-                      }
-                      className="rounded-3xl border border-transparent bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {conflicts.length > 0
-                        ? "Continue to Conflicts"
-                        : "Merge Member"}
-                    </button>
+                    {loading ? (
+                      <div className="bottom-2 absolute w-full flex justify-center items-center">
+                        <Loader show />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleConflict}
+                        disabled={
+                          loading ||
+                          (selectedMember
+                            ? confirmName !== selectedMember.name
+                            : true)
+                        }
+                        className="rounded-3xl border border-transparent bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {conflicts.length > 0
+                          ? "Continue to Conflicts"
+                          : "Merge Member"}
+                      </button>
+                    )}
                   </div>
                 </div>
               ) : (
