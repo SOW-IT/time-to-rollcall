@@ -351,7 +351,7 @@ export default function MergeMember({
                         onChange={setSelectedMember}
                       >
                         <div className="relative">
-                          <ListboxButton className="relative w-full cursor-pointer rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
+                          <ListboxButton className="relative w-full cursor-pointer rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <span className="block truncate">
                               {selectedMember
                                 ? selectedMember.name
@@ -371,10 +371,6 @@ export default function MergeMember({
                             leaveTo="opacity-0"
                           >
                             <ListboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                              {/* <ListboxOptions
-                              // anchor="top"
-                              className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                            > */}
                               {members.map((member) => (
                                 <ListboxOption
                                   key={member.id}
@@ -382,7 +378,7 @@ export default function MergeMember({
                                   className={({ active }) =>
                                     `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
                                       active
-                                        ? "bg-red-100 text-red-900"
+                                        ? "bg-blue-100 text-blue-900"
                                         : "text-gray-900"
                                     }`
                                   }
@@ -399,7 +395,7 @@ export default function MergeMember({
                                         {member.name}
                                       </span>
                                       {selected ? (
-                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-red-600">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
                                           <CheckIcon
                                             className="h-5 w-5"
                                             aria-hidden="true"

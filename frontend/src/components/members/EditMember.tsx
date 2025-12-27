@@ -165,7 +165,7 @@ export default function EditMember({
                         className="absolute left-12 top-2 p-2 cursor-pointer"
                         onClick={openMergeMemberModal}
                       >
-                        <UserPlusIcon className="w-6 h-6 text-blue-600 hover:text-red-800 active:text-red-800" />
+                        <UserPlusIcon className="w-6 h-6 text-blue-600 hover:text-blue-800 active:text-red-800" />
                       </div>
                     </>
                   )}
