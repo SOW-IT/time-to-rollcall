@@ -101,7 +101,6 @@ export default function MergeMember({
   };
 
   const handleConflict = () => {
-    setLoading(true);
     const conflicts = detectConflicts();
 
     if (conflicts.length > 0) {
@@ -119,6 +118,7 @@ export default function MergeMember({
   };
 
   const handleMerge = async () => {
+    setLoading(true);
     if (!selectedMember) return;
 
     const mergePromise = async () => {
@@ -583,20 +583,25 @@ export default function MergeMember({
                   </div>
 
                   <div className="flex justify-center fixed bottom-4 left-0 right-0 px-4">
-                    <button
-                      type="button"
-                      onClick={handleMerge}
-                      className="rounded-3xl border border-transparent bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
-                    >
-                      Complete Merge
-                    </button>
+                    {loading ? (
+                      <div className="bottom-2 absolute w-full flex justify-center items-center">
+                        <Loader show />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleMerge}
+                        className="rounded-3xl border border-transparent bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
+                      >
+                        Complete Merge
+                      </button>
+                    )}
                   </div>
                 </>
               )}
             </DialogPanel>
           </TransitionChild>
         </div>
-        {/* </div> */}
       </Dialog>
     </Transition>
   );
