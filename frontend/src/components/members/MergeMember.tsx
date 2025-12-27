@@ -66,6 +66,20 @@ export default function MergeMember({
       selectedValue: any;
     }> = [];
 
+    // check name conflict
+    if (
+      primaryMember.name &&
+      selectedMember.name &&
+      primaryMember.name !== selectedMember.name
+    ) {
+      conflicts.push({
+        field: "name",
+        label: "Name",
+        primaryValue: primaryMember.name,
+        selectedValue: selectedMember.name,
+      });
+    }
+
     // Check email conflict
     if (
       primaryMember.email &&
