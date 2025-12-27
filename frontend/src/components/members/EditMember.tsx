@@ -99,6 +99,7 @@ export default function EditMember({
             closeModal={closeMergeMemberModal}
             members={availableMembersToMerge}
             primaryMember={member}
+            onMergeComplete={closeModal}
           />
         )}
 

@@ -37,11 +37,13 @@ export default function MergeMember({
   closeModal,
   members,
   primaryMember,
+  onMergeComplete,
 }: {
   isOpen: boolean;
   closeModal: () => void;
   members: MemberModel[];
   primaryMember: MemberModel;
+  onMergeComplete?: () => void;
 }) {
   const metadata = useContext(MetadataContext);
   const [selectedMember, setSelectedMember] = useState<MemberModel | null>(
@@ -142,8 +144,11 @@ export default function MergeMember({
       // Apply resolved conflict
       Object.keys(conflictResolutions).forEach((field) => {
         const choice = conflictResolutions[field];
-
-        if (field === "email") {
+        if (field === "name") {
+          // Handle name field
+          mergedMember.name =
+            choice === "primary" ? primaryMember.name : selectedMember.name;
+        } else if (field === "email") {
           // Handle email field
           mergedMember.email =
             choice === "primary" ? primaryMember.email : selectedMember.email;
@@ -270,6 +275,7 @@ export default function MergeMember({
       setConflictResolutions({});
       setSelectedMember(null);
       setLoading(false);
+      onMergeComplete?.();
     }
   };
 
