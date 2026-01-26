@@ -304,6 +304,7 @@ export default function MergeMember({
           closeModal();
           setShowConflicts(false);
           setConfirmName("");
+          setSelectedMember(null);
         }}
       >
         <div className="fixed inset-0 flex justify-center">
@@ -316,7 +317,7 @@ export default function MergeMember({
               leaveFrom="transform translate-y-0"
               leaveTo="transform translate-y-full"
             >
-              <DialogPanel className="rounded-t-3xl bg-white pt-4 pb-0 shadow-xl w-full max-h-[80vh] flex flex-col">
+              <DialogPanel className="rounded-t-3xl bg-white pt-4 pb-0 shadow-xl w-full h-[60vh] max-h-[80vh] flex flex-col">
                 <div
                   className="absolute left-2 top-2 p-2 cursor-pointer"
                   onClick={() => {
@@ -380,7 +381,7 @@ export default function MergeMember({
                             leaveFrom="opacity-100"
                             leaveTo="opacity-0"
                           >
-                            <ListboxOptions className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <ListboxOptions className="absolute z-10 mt-1 max-h-80 w-full overflow-auto rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                               {members.map((member) => (
                                 <ListboxOption
                                   key={member.id}
