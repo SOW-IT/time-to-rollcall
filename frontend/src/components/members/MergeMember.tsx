@@ -47,7 +47,7 @@ export default function MergeMember({
 }) {
   const metadata = useContext(MetadataContext);
   const [selectedMember, setSelectedMember] = useState<MemberModel | null>(
-    null
+    null,
   );
   const [confirmName, setConfirmName] = useState("");
   const [showConflicts, setShowConflicts] = useState(false);
@@ -193,7 +193,7 @@ export default function MergeMember({
       const replaceDuplicateMembers = (
         members?: { member: DocumentReference; signInTime: Timestamp }[],
         primaryMember?: DocumentReference,
-        secondaryMember?: DocumentReference
+        secondaryMember?: DocumentReference,
       ) => {
         if (!members || members.length === 0) return [];
         if (!primaryMember || !secondaryMember) return members;
@@ -203,7 +203,7 @@ export default function MergeMember({
 
         const hasPrimary = members.some((m) => m.member.path === primaryPath);
         const hasSecondary = members.some(
-          (m) => m.member.path === secondaryPath
+          (m) => m.member.path === secondaryPath,
         );
 
         // Remove secondary member from the list
@@ -213,7 +213,7 @@ export default function MergeMember({
         if (hasSecondary && !hasPrimary) {
           // Use the secondary's sign-in time for the primary member
           const secondaryEntry = members.find(
-            (m) => m.member.path === secondaryPath
+            (m) => m.member.path === secondaryPath,
           );
           filtered.push({
             member: primaryMember,
@@ -226,7 +226,7 @@ export default function MergeMember({
 
       const replacePrimarySecondary = async (
         primaryMember: DocumentReference,
-        secondaryMember: DocumentReference
+        secondaryMember: DocumentReference,
       ) => {
         for (const groupId of [
           "ccSgQTXvLRnin0OjwvRM", // UNSW
@@ -236,7 +236,7 @@ export default function MergeMember({
           "bhaiAKXThkH9GbxpjZrd", // test group
         ]) {
           const events = await getDocs(
-            collection(firestore, "groups", groupId, "events")
+            collection(firestore, "groups", groupId, "events"),
           );
 
           for (const e of events.docs) {
@@ -245,7 +245,7 @@ export default function MergeMember({
               members: replaceDuplicateMembers(
                 e.data().members,
                 primaryMember,
-                secondaryMember
+                secondaryMember,
               ),
             });
           }
@@ -253,7 +253,7 @@ export default function MergeMember({
       };
       await replacePrimarySecondary(
         primaryMember.docRef,
-        selectedMember.docRef
+        selectedMember.docRef,
       );
 
       deleteMember(selectedMember.docRef);
@@ -264,7 +264,7 @@ export default function MergeMember({
         mergePromise(),
         "Merging Members...",
         "Merged Member!",
-        "Could not merge member."
+        "Could not merge member.",
       );
     } catch (error) {
       console.error("Error merging member:", error);
@@ -317,7 +317,7 @@ export default function MergeMember({
               leaveFrom="transform translate-y-0"
               leaveTo="transform translate-y-full"
             >
-              <DialogPanel className="rounded-t-3xl bg-white pt-4 pb-0 shadow-xl w-full h-[60vh] max-h-[80vh] flex flex-col">
+              <DialogPanel className="rounded-t-3xl bg-white pt-4 pb-0 shadow-xl w-full h-[75vh] max-h-[80vh] flex flex-col">
                 <div
                   className="absolute left-2 top-2 p-2 cursor-pointer"
                   onClick={() => {
@@ -340,7 +340,7 @@ export default function MergeMember({
                 </DialogTitle>
 
                 {!showConflicts ? (
-                  <div className="overflow-auto flex-1 pb-14 px-4">
+                  <div className="overflow-auto flex-1 pb-4 px-4 flex flex-col">
                     <div className="mt-4 px-12">
                       <p className="text-sm text-center">
                         <strong>Primary Member:</strong> {primaryMember.name}
@@ -353,7 +353,9 @@ export default function MergeMember({
                       </p>
                     </div>
 
-                    <div className="my-4 mt-6 px-12">
+                    <div
+                      className={`${selectedMember ? "mt-6" : "mt-auto"} pt-6 px-12`}
+                    >
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Select Member to Merge
                       </label>
@@ -381,7 +383,11 @@ export default function MergeMember({
                             leaveFrom="opacity-100"
                             leaveTo="opacity-0"
                           >
-                            <ListboxOptions className="absolute z-10 mt-1 max-h-80 w-full overflow-auto rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <ListboxOptions
+                              anchor="top"
+                              modal={false}
+                              className="mb-1 h-[40vh] max-h-[60vh] w-[var(--button-width)] overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm [--anchor-gap:4px]"
+                            >
                               {members.map((member) => (
                                 <ListboxOption
                                   key={member.id}
@@ -508,9 +514,9 @@ export default function MergeMember({
                       </div>
                     )}
 
-                    <div className="flex justify-center fixed bottom-4 left-0 right-0 px-4">
+                    <div className="flex justify-center px-4 pt-4 pb-4">
                       {loading ? (
-                        <div className="bottom-2 absolute w-full flex justify-center items-center">
+                        <div className="w-full flex justify-center items-center">
                           <Loader show />
                         </div>
                       ) : (
