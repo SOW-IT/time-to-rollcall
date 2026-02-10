@@ -233,7 +233,7 @@ export default function MergeMember({
           "CZHRnKJ8SDnfMIw64WJu", // MCQ
           "MUSmSaufEfgdJUX4Kx4G", // USYD
           "wrsDV3XfwQB4RD7BxKD2", // UTS
-          "bhaiAKXThkH9GbxpjZrd", // test group
+          // "bhaiAKXThkH9GbxpjZrd", // test group
         ]) {
           const events = await getDocs(
             collection(firestore, "groups", groupId, "events"),
@@ -307,6 +307,18 @@ export default function MergeMember({
           setSelectedMember(null);
         }}
       >
+        <TransitionChild
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black/25" />
+        </TransitionChild>
+
         <div className="fixed inset-0 flex justify-center">
           <div className="fixed max-md:w-full md:w-[600px] bottom-0">
             <TransitionChild
