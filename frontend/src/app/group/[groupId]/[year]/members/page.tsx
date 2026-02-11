@@ -290,6 +290,18 @@ export default function GroupMember({
     setDeleteConfirmationIsOpen(true);
   }
 
+  const [mergeMemberIsOpen, setMergeMemberIsOpen] = useState(false);
+
+  function closeMergeMemberModal() {
+    openModal();
+    setMergeMemberIsOpen(false);
+  }
+
+  function openMergeMemberModal() {
+    closeModal();
+    setMergeMemberIsOpen(true);
+  }
+
   const disabled = currentYearStr !== params.year;
 
   if (loading) {
@@ -313,6 +325,9 @@ export default function GroupMember({
           deleteConfirmationIsOpen={deleteConfirmationIsOpen}
           openDeleteConfirmationModal={openDeleteConfirmationModal}
           closeDeleteConfirmationModal={closeDeleteConfirmationModal}
+          mergeMemberIsOpen={mergeMemberIsOpen}
+          openMergeMemberModal={openMergeMemberModal}
+          closeMergeMemberModal={closeMergeMemberModal}
           deleteMember={deleteMemberIn}
           updatingDelete={updatingDelete}
         />

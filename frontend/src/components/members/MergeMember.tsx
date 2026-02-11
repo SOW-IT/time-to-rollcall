@@ -1,0 +1,655 @@
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "@headlessui/react";
+import Loader from "../Loader";
+import { Fragment, useContext, useState } from "react";
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  ChevronUpDownIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
+import { MemberModel } from "@/models/Member";
+import { MetadataContext } from "@/lib/context";
+import { MetadataSelectModel } from "@/models/Metadata";
+import { updateMember, deleteMember } from "@/lib/members";
+import {
+  collection,
+  DocumentReference,
+  getDocs,
+  Timestamp,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
+import { firestore } from "@/lib/firebase";
+import { promiseToast } from "@/helper/Toast";
+
+export default function MergeMember({
+  isOpen,
+  closeModal,
+  members,
+  primaryMember,
+  onMergeComplete,
+}: {
+  isOpen: boolean;
+  closeModal: () => void;
+  members: MemberModel[];
+  primaryMember: MemberModel;
+  onMergeComplete?: () => void;
+}) {
+  const metadata = useContext(MetadataContext);
+  const [selectedMember, setSelectedMember] = useState<MemberModel | null>(
+    null,
+  );
+  const [confirmName, setConfirmName] = useState("");
+  const [showConflicts, setShowConflicts] = useState(false);
+  const [conflictResolutions, setConflictResolutions] = useState<{
+    [key: string]: "primary" | "selected";
+  }>({});
+  // Loading: not loading = false
+  const [loading, setLoading] = useState(false);
+
+  // When the selected member and primary have conflicting fields
+  const detectConflicts = () => {
+    if (!selectedMember) return [];
+
+    const conflicts: Array<{
+      field: string;
+      label: string;
+      primaryValue: any;
+      selectedValue: any;
+    }> = [];
+
+    // check name conflict
+    if (
+      primaryMember.name &&
+      selectedMember.name &&
+      primaryMember.name !== selectedMember.name
+    ) {
+      conflicts.push({
+        field: "name",
+        label: "Name",
+        primaryValue: primaryMember.name,
+        selectedValue: selectedMember.name,
+      });
+    }
+
+    // Check email conflict
+    if (
+      primaryMember.email &&
+      selectedMember.email &&
+      primaryMember.email !== selectedMember.email
+    ) {
+      conflicts.push({
+        field: "email",
+        label: "Email",
+        primaryValue: primaryMember.email,
+        selectedValue: selectedMember.email,
+      });
+    }
+
+    // Check metadata conflicts
+    if (metadata) {
+      metadata.forEach((m) => {
+        const primaryValue = primaryMember.metadata?.[m.id];
+        const selectedValue = selectedMember.metadata?.[m.id];
+
+        if (primaryValue && selectedValue && primaryValue !== selectedValue) {
+          conflicts.push({
+            field: `metadata.${m.id}`,
+            label: m.key,
+            primaryValue: getMetadataDisplayValue(m, primaryValue),
+            selectedValue: getMetadataDisplayValue(m, selectedValue),
+          });
+        }
+      });
+    }
+
+    return conflicts;
+  };
+
+  const handleConflict = () => {
+    const conflicts = detectConflicts();
+
+    if (conflicts.length > 0) {
+      // Initialise conflict resolutions to primary by default
+      const initialResolutions: { [key: string]: "primary" | "selected" } = {};
+      conflicts.forEach((conflict) => {
+        initialResolutions[conflict.field] = "primary";
+      });
+      setConflictResolutions(initialResolutions);
+      setShowConflicts(true);
+    } else {
+      // No conflicts, proceed with merge
+      handleMerge();
+    }
+  };
+
+  const handleMerge = async () => {
+    setLoading(true);
+    if (!selectedMember) return;
+
+    const mergePromise = async () => {
+      const mergedMember = {
+        ...primaryMember,
+      };
+      // Apply resolved conflict
+      Object.keys(conflictResolutions).forEach((field) => {
+        const choice = conflictResolutions[field];
+        if (field === "name") {
+          // Handle name field
+          mergedMember.name =
+            choice === "primary" ? primaryMember.name : selectedMember.name;
+        } else if (field === "email") {
+          // Handle email field
+          mergedMember.email =
+            choice === "primary" ? primaryMember.email : selectedMember.email;
+        } else if (field.startsWith("metadata.")) {
+          // Handle metadata fields
+          const metadataId = field.replace("metadata.", "");
+          if (!mergedMember.metadata) mergedMember.metadata = {};
+
+          const selectedValue =
+            choice === "primary"
+              ? primaryMember.metadata?.[metadataId]
+              : selectedMember.metadata?.[metadataId];
+
+          // Only assign if value exists
+          if (selectedValue !== undefined) {
+            mergedMember.metadata[metadataId] = selectedValue;
+          }
+        }
+      });
+      // Merge not confictfields from selected member
+      if (selectedMember.metadata && metadata) {
+        if (!mergedMember.metadata) mergedMember.metadata = {};
+
+        metadata.forEach((m) => {
+          const primaryValue = primaryMember.metadata?.[m.id];
+          const selectedValue = selectedMember.metadata?.[m.id];
+
+          // If primary is empty but selected has a value, use selected value
+          if (!primaryValue && selectedValue && mergedMember.metadata) {
+            mergedMember.metadata[m.id] = selectedValue;
+          }
+        });
+      }
+
+      // Merge email if primary is empty but selected has one
+      if (!mergedMember.email && selectedMember.email) {
+        mergedMember.email = selectedMember.email;
+      }
+      // Update primary information
+      updateMember(primaryMember.docRef, mergedMember);
+
+      const replaceDuplicateMembers = (
+        members?: { member: DocumentReference; signInTime: Timestamp }[],
+        primaryMember?: DocumentReference,
+        secondaryMember?: DocumentReference,
+      ) => {
+        if (!members || members.length === 0) return [];
+        if (!primaryMember || !secondaryMember) return members;
+
+        const primaryPath = primaryMember.path;
+        const secondaryPath = secondaryMember.path;
+
+        const hasPrimary = members.some((m) => m.member.path === primaryPath);
+        const hasSecondary = members.some(
+          (m) => m.member.path === secondaryPath,
+        );
+
+        // Remove secondary member from the list
+        let filtered = members.filter((m) => m.member.path !== secondaryPath);
+
+        // If only secondary was present (not primary), add primary member
+        if (hasSecondary && !hasPrimary) {
+          // Use the secondary's sign-in time for the primary member
+          const secondaryEntry = members.find(
+            (m) => m.member.path === secondaryPath,
+          );
+          filtered.push({
+            member: primaryMember,
+            signInTime: secondaryEntry?.signInTime || Timestamp.now(),
+          });
+        }
+
+        return filtered;
+      };
+
+      const replacePrimarySecondary = async (
+        primaryMember: DocumentReference,
+        secondaryMember: DocumentReference,
+      ) => {
+        for (const groupId of [
+          "ccSgQTXvLRnin0OjwvRM", // UNSW
+          "CZHRnKJ8SDnfMIw64WJu", // MCQ
+          "MUSmSaufEfgdJUX4Kx4G", // USYD
+          "wrsDV3XfwQB4RD7BxKD2", // UTS
+          // "bhaiAKXThkH9GbxpjZrd", // test group
+        ]) {
+          const events = await getDocs(
+            collection(firestore, "groups", groupId, "events"),
+          );
+
+          for (const e of events.docs) {
+            // For each event, replaces secondary member with primary member
+            await updateDoc(doc(firestore, "groups", groupId, "events", e.id), {
+              members: replaceDuplicateMembers(
+                e.data().members,
+                primaryMember,
+                secondaryMember,
+              ),
+            });
+          }
+        }
+      };
+      await replacePrimarySecondary(
+        primaryMember.docRef,
+        selectedMember.docRef,
+      );
+
+      deleteMember(selectedMember.docRef);
+    };
+
+    try {
+      await promiseToast(
+        mergePromise(),
+        "Merging Members...",
+        "Merged Member!",
+        "Could not merge member.",
+      );
+    } catch (error) {
+      console.error("Error merging member:", error);
+    } finally {
+      closeModal();
+      setShowConflicts(false);
+      setConfirmName("");
+      setConflictResolutions({});
+      setSelectedMember(null);
+      setLoading(false);
+      onMergeComplete?.();
+    }
+  };
+
+  // Clear conflicts if back arrow is clicked
+  const handleBack = () => {
+    setShowConflicts(false);
+    setConflictResolutions({});
+    setLoading(false);
+  };
+
+  const getMetadataDisplayValue = (metadataItem: any, value: string) => {
+    if (metadataItem.type === "select") {
+      return (metadataItem as MetadataSelectModel).values[value] || value;
+    }
+    return value;
+  };
+
+  const conflicts = selectedMember ? detectConflicts() : [];
+
+  return (
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog
+        as="div"
+        className="fixed inset-0 z-50 overflow-hidden"
+        onClose={() => {
+          closeModal();
+          setShowConflicts(false);
+          setConfirmName("");
+          setSelectedMember(null);
+        }}
+      >
+        <TransitionChild
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-black/25" />
+        </TransitionChild>
+
+        <div className="fixed inset-0 flex justify-center">
+          <div className="fixed max-md:w-full md:w-[600px] bottom-0">
+            <TransitionChild
+              enter="transition ease-in-out duration-300 transform"
+              enterFrom="transform translate-y-full"
+              enterTo="transform translate-y-0"
+              leave="transition ease-in-out duration-300 transform"
+              leaveFrom="transform translate-y-0"
+              leaveTo="transform translate-y-full"
+            >
+              <DialogPanel className="rounded-t-3xl bg-white pt-4 pb-0 shadow-xl w-full h-[75vh] max-h-[80vh] flex flex-col">
+                <div
+                  className="absolute left-2 top-2 p-2 cursor-pointer"
+                  onClick={() => {
+                    if (showConflicts) {
+                      handleBack();
+                    } else {
+                      closeModal();
+                      setConfirmName("");
+                      setSelectedMember(null);
+                    }
+                  }}
+                >
+                  <ArrowLeftIcon className="w-6 h-6 text-gray-600 hover:text-black active:text-black" />
+                </div>
+                <DialogTitle
+                  as="h3"
+                  className="text-xl text-center font-medium leading-6 text-gray-900 p-3 flex-shrink-0"
+                >
+                  {showConflicts ? "Resolve Conflicts" : "Merge Member"}
+                </DialogTitle>
+
+                {!showConflicts ? (
+                  <div className="overflow-auto flex-1 pb-4 px-4 flex flex-col">
+                    <div className="mt-4 px-12">
+                      <p className="text-sm text-center">
+                        <strong>Primary Member:</strong> {primaryMember.name}
+                      </p>
+                      <p className="mt-2 text-sm text-gray-500 text-center">
+                        Select a member to merge with. All attendance records
+                        and data from the selected member will be transferred to
+                        the primary member, and the selected member will be
+                        deleted.
+                      </p>
+                    </div>
+
+                    <div
+                      className={`${selectedMember ? "mt-6" : "mt-auto"} pt-6 px-12`}
+                    >
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Member to Merge
+                      </label>
+                      <Listbox
+                        value={selectedMember}
+                        onChange={setSelectedMember}
+                      >
+                        <div className="relative">
+                          <ListboxButton className="relative w-full cursor-pointer rounded-lg bg-white py-2 pl-3 pr-10 text-left border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <span className="block truncate">
+                              {selectedMember
+                                ? selectedMember.name
+                                : "-- Choose a member --"}
+                            </span>
+                            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                              <ChevronUpDownIcon
+                                className="h-5 w-5 text-gray-400"
+                                aria-hidden="true"
+                              />
+                            </span>
+                          </ListboxButton>
+                          <Transition
+                            as={Fragment}
+                            leave="transition ease-in duration-100"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                          >
+                            <ListboxOptions
+                              anchor="top"
+                              modal={false}
+                              className="mb-1 h-[40vh] max-h-[60vh] w-[var(--button-width)] overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm [--anchor-gap:4px]"
+                            >
+                              {members.map((member) => (
+                                <ListboxOption
+                                  key={member.id}
+                                  value={member}
+                                  className={({ active }) =>
+                                    `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
+                                      active
+                                        ? "bg-blue-100 text-blue-900"
+                                        : "text-gray-900"
+                                    }`
+                                  }
+                                >
+                                  {({ selected }) => (
+                                    <>
+                                      <span
+                                        className={`block truncate ${
+                                          selected
+                                            ? "font-medium"
+                                            : "font-normal"
+                                        }`}
+                                      >
+                                        {member.name}
+                                      </span>
+                                      {selected ? (
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
+                                          <CheckIcon
+                                            className="h-5 w-5"
+                                            aria-hidden="true"
+                                          />
+                                        </span>
+                                      ) : null}
+                                    </>
+                                  )}
+                                </ListboxOption>
+                              ))}
+                            </ListboxOptions>
+                          </Transition>
+                        </div>
+                      </Listbox>
+                    </div>
+
+                    {selectedMember && (
+                      <div className="mt-6 px-12">
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                            <p className="text-sm font-semibold text-gray-900 mb-2">
+                              Primary Member
+                            </p>
+                            <p className="text-sm mb-2">
+                              <strong>Name:</strong> {primaryMember.name}
+                            </p>
+                            {primaryMember.email && (
+                              <p className="text-sm mb-2">
+                                <strong>Email:</strong> {primaryMember.email}
+                              </p>
+                            )}
+                            {metadata &&
+                              metadata.map((m) => {
+                                const value = primaryMember.metadata?.[m.id];
+                                if (!value) return null;
+                                return (
+                                  <p key={m.id} className="text-sm mb-2">
+                                    <strong>{m.key}:</strong>{" "}
+                                    {getMetadataDisplayValue(m, value)}
+                                  </p>
+                                );
+                              })}
+                          </div>
+
+                          <div className="border border-red-200 rounded-lg p-3 bg-red-50">
+                            <p className="text-sm font-semibold text-red-900 mb-2">
+                              Selected Member (will be deleted)
+                            </p>
+                            <p className="text-sm mb-2">
+                              <strong>Name:</strong> {selectedMember.name}
+                            </p>
+                            {selectedMember.email && (
+                              <p className="text-sm mb-2">
+                                <strong>Email:</strong> {selectedMember.email}
+                              </p>
+                            )}
+                            {metadata &&
+                              metadata.map((m) => {
+                                const value = selectedMember.metadata?.[m.id];
+                                if (!value) return null;
+                                return (
+                                  <p key={m.id} className="text-sm mb-2">
+                                    <strong>{m.key}:</strong>{" "}
+                                    {getMetadataDisplayValue(m, value)}
+                                  </p>
+                                );
+                              })}
+                          </div>
+                        </div>
+
+                        {conflicts.length > 0 && (
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                            <p className="text-sm text-yellow-800">
+                              <span className="inline-flex items-center gap-1">
+                                <ExclamationTriangleIcon className="w-5 h-5" />
+                                {conflicts.length} field conflict
+                                {conflicts.length > 1 ? "s" : ""} detected. You
+                                will choose which values to keep after
+                                confirmation.
+                              </span>
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col items-center w-full mt-2">
+                          <p className="text-gray-500 text-sm">
+                            To confirm merge, type &quot;{selectedMember.name}
+                            &quot; in the box below
+                          </p>
+                          <input
+                            type="text"
+                            autoFocus
+                            className="text-center border-2 rounded-md border-red-500 px-3 py-1"
+                            placeholder={selectedMember.name}
+                            value={confirmName}
+                            onChange={(e) => setConfirmName(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex justify-center px-4 pt-4 pb-4">
+                      {loading ? (
+                        <div className="w-full flex justify-center items-center">
+                          <Loader show />
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleConflict}
+                          disabled={
+                            loading ||
+                            (selectedMember
+                              ? confirmName !== selectedMember.name
+                              : true)
+                          }
+                          className="rounded-3xl border border-transparent bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {conflicts.length > 0
+                            ? "Continue to Conflicts"
+                            : "Merge Member"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="overflow-auto flex-1 pb-20 px-4">
+                    <div className="mt-4 px-8">
+                      <p className="text-sm text-gray-700 text-center mb-4">
+                        The following fields have different values. Choose which
+                        value to keep for the merged member.
+                      </p>
+
+                      <div className="space-y-4">
+                        {conflicts.map((conflict) => (
+                          <div
+                            key={conflict.field}
+                            className="border border-gray-200 rounded-lg p-4 bg-white"
+                          >
+                            <p className="text-sm font-semibold text-gray-900 mb-3">
+                              {conflict.label}
+                            </p>
+                            <div className="space-y-2">
+                              <label className="flex items-start space-x-3 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={conflict.field}
+                                  checked={
+                                    conflictResolutions[conflict.field] ===
+                                    "primary"
+                                  }
+                                  onChange={() =>
+                                    setConflictResolutions({
+                                      ...conflictResolutions,
+                                      [conflict.field]: "primary",
+                                    })
+                                  }
+                                  className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500"
+                                  disabled={loading}
+                                />
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900">
+                                    Keep from {primaryMember.name}
+                                  </p>
+                                  <p className="text-sm text-gray-600 bg-gray-50 rounded px-2 py-1 mt-1">
+                                    {conflict.primaryValue}
+                                  </p>
+                                </div>
+                              </label>
+
+                              <label className="flex items-start space-x-3 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={conflict.field}
+                                  checked={
+                                    conflictResolutions[conflict.field] ===
+                                    "selected"
+                                  }
+                                  onChange={() =>
+                                    setConflictResolutions({
+                                      ...conflictResolutions,
+                                      [conflict.field]: "selected",
+                                    })
+                                  }
+                                  disabled={loading}
+                                  className="mt-1 h-4 w-4 text-red-600 focus:ring-red-500"
+                                />
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-gray-900">
+                                    Keep from {selectedMember?.name}
+                                  </p>
+                                  <p className="text-sm text-gray-600 bg-red-50 rounded px-2 py-1 mt-1">
+                                    {conflict.selectedValue}
+                                  </p>
+                                </div>
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-center fixed bottom-4 left-0 right-0 px-4">
+                      {loading ? (
+                        <div className="bottom-2 absolute w-full flex justify-center items-center">
+                          <Loader show />
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleMerge}
+                          className="rounded-3xl border border-transparent bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
+                          disabled={loading}
+                        >
+                          Complete Merge
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </Transition>
+  );
+}

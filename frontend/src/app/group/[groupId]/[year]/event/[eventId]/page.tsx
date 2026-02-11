@@ -495,6 +495,18 @@ export default function Event({
     setDeleteConfirmationIsOpen(true);
   }
 
+  const [mergeMemberIsOpen, setMergeMemberIsOpen] = useState(false);
+
+  function closeMergeMemberModal() {
+    openModal();
+    setMergeMemberIsOpen(false);
+  }
+
+  function openMergeMemberModal() {
+    closeModal();
+    setMergeMemberIsOpen(true);
+  }
+
   return (
     <>
       {!toggleEdit && (
@@ -526,6 +538,9 @@ export default function Event({
             deleteConfirmationIsOpen={deleteConfirmationIsOpen}
             openDeleteConfirmationModal={openDeleteConfirmationModal}
             closeDeleteConfirmationModal={closeDeleteConfirmationModal}
+            mergeMemberIsOpen={mergeMemberIsOpen}
+            openMergeMemberModal={openMergeMemberModal}
+            closeMergeMemberModal={closeMergeMemberModal}
             deleteMember={deleteMemberIn}
             updatingDelete={updatingDelete}
             signInTime={selectedMemberInfo.signInTime}
