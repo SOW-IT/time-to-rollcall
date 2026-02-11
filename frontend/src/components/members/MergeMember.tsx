@@ -19,17 +19,13 @@ import {
 } from "@heroicons/react/24/outline";
 import { MemberModel } from "@/models/Member";
 import { MetadataContext } from "@/lib/context";
-import { MetadataSelectModel } from "@/models/Metadata";
-import { updateMember, deleteMember } from "@/lib/members";
 import {
-  collection,
-  DocumentReference,
-  getDocs,
-  Timestamp,
-  updateDoc,
-  doc,
-} from "firebase/firestore";
-import { firestore } from "@/lib/firebase";
+  detectConflicts as detectMergeConflicts,
+  buildMergedMember,
+  mergeMembers,
+  getMetadataDisplayValue,
+  ConflictResolutions,
+} from "@/lib/merge";
 import { promiseToast } from "@/helper/Toast";
 
 export default function MergeMember({
@@ -51,69 +47,15 @@ export default function MergeMember({
   );
   const [confirmName, setConfirmName] = useState("");
   const [showConflicts, setShowConflicts] = useState(false);
-  const [conflictResolutions, setConflictResolutions] = useState<{
-    [key: string]: "primary" | "selected";
-  }>({});
+  const [conflictResolutions, setConflictResolutions] =
+    useState<ConflictResolutions>({});
   // Loading: not loading = false
   const [loading, setLoading] = useState(false);
 
   // When the selected member and primary have conflicting fields
   const detectConflicts = () => {
     if (!selectedMember) return [];
-
-    const conflicts: Array<{
-      field: string;
-      label: string;
-      primaryValue: any;
-      selectedValue: any;
-    }> = [];
-
-    // check name conflict
-    if (
-      primaryMember.name &&
-      selectedMember.name &&
-      primaryMember.name !== selectedMember.name
-    ) {
-      conflicts.push({
-        field: "name",
-        label: "Name",
-        primaryValue: primaryMember.name,
-        selectedValue: selectedMember.name,
-      });
-    }
-
-    // Check email conflict
-    if (
-      primaryMember.email &&
-      selectedMember.email &&
-      primaryMember.email !== selectedMember.email
-    ) {
-      conflicts.push({
-        field: "email",
-        label: "Email",
-        primaryValue: primaryMember.email,
-        selectedValue: selectedMember.email,
-      });
-    }
-
-    // Check metadata conflicts
-    if (metadata) {
-      metadata.forEach((m) => {
-        const primaryValue = primaryMember.metadata?.[m.id];
-        const selectedValue = selectedMember.metadata?.[m.id];
-
-        if (primaryValue && selectedValue && primaryValue !== selectedValue) {
-          conflicts.push({
-            field: `metadata.${m.id}`,
-            label: m.key,
-            primaryValue: getMetadataDisplayValue(m, primaryValue),
-            selectedValue: getMetadataDisplayValue(m, selectedValue),
-          });
-        }
-      });
-    }
-
-    return conflicts;
+    return detectMergeConflicts(primaryMember, selectedMember, metadata);
   };
 
   const handleConflict = () => {
@@ -138,125 +80,18 @@ export default function MergeMember({
     if (!selectedMember) return;
 
     const mergePromise = async () => {
-      const mergedMember = {
-        ...primaryMember,
-      };
-      // Apply resolved conflict
-      Object.keys(conflictResolutions).forEach((field) => {
-        const choice = conflictResolutions[field];
-        if (field === "name") {
-          // Handle name field
-          mergedMember.name =
-            choice === "primary" ? primaryMember.name : selectedMember.name;
-        } else if (field === "email") {
-          // Handle email field
-          mergedMember.email =
-            choice === "primary" ? primaryMember.email : selectedMember.email;
-        } else if (field.startsWith("metadata.")) {
-          // Handle metadata fields
-          const metadataId = field.replace("metadata.", "");
-          if (!mergedMember.metadata) mergedMember.metadata = {};
-
-          const selectedValue =
-            choice === "primary"
-              ? primaryMember.metadata?.[metadataId]
-              : selectedMember.metadata?.[metadataId];
-
-          // Only assign if value exists
-          if (selectedValue !== undefined) {
-            mergedMember.metadata[metadataId] = selectedValue;
-          }
-        }
-      });
-      // Merge not confictfields from selected member
-      if (selectedMember.metadata && metadata) {
-        if (!mergedMember.metadata) mergedMember.metadata = {};
-
-        metadata.forEach((m) => {
-          const primaryValue = primaryMember.metadata?.[m.id];
-          const selectedValue = selectedMember.metadata?.[m.id];
-
-          // If primary is empty but selected has a value, use selected value
-          if (!primaryValue && selectedValue && mergedMember.metadata) {
-            mergedMember.metadata[m.id] = selectedValue;
-          }
-        });
-      }
-
-      // Merge email if primary is empty but selected has one
-      if (!mergedMember.email && selectedMember.email) {
-        mergedMember.email = selectedMember.email;
-      }
-      // Update primary information
-      updateMember(primaryMember.docRef, mergedMember);
-
-      const replaceDuplicateMembers = (
-        members?: { member: DocumentReference; signInTime: Timestamp }[],
-        primaryMember?: DocumentReference,
-        secondaryMember?: DocumentReference,
-      ) => {
-        if (!members || members.length === 0) return [];
-        if (!primaryMember || !secondaryMember) return members;
-
-        const primaryPath = primaryMember.path;
-        const secondaryPath = secondaryMember.path;
-
-        const hasPrimary = members.some((m) => m.member.path === primaryPath);
-        const hasSecondary = members.some(
-          (m) => m.member.path === secondaryPath,
-        );
-
-        // Remove secondary member from the list
-        let filtered = members.filter((m) => m.member.path !== secondaryPath);
-
-        // If only secondary was present (not primary), add primary member
-        if (hasSecondary && !hasPrimary) {
-          // Use the secondary's sign-in time for the primary member
-          const secondaryEntry = members.find(
-            (m) => m.member.path === secondaryPath,
-          );
-          filtered.push({
-            member: primaryMember,
-            signInTime: secondaryEntry?.signInTime || Timestamp.now(),
-          });
-        }
-
-        return filtered;
-      };
-
-      const replacePrimarySecondary = async (
-        primaryMember: DocumentReference,
-        secondaryMember: DocumentReference,
-      ) => {
-        for (const groupId of [
-          "ccSgQTXvLRnin0OjwvRM", // UNSW
-          "CZHRnKJ8SDnfMIw64WJu", // MCQ
-          "MUSmSaufEfgdJUX4Kx4G", // USYD
-          "wrsDV3XfwQB4RD7BxKD2", // UTS
-          // "bhaiAKXThkH9GbxpjZrd", // test group
-        ]) {
-          const events = await getDocs(
-            collection(firestore, "groups", groupId, "events"),
-          );
-
-          for (const e of events.docs) {
-            // For each event, replaces secondary member with primary member
-            await updateDoc(doc(firestore, "groups", groupId, "events", e.id), {
-              members: replaceDuplicateMembers(
-                e.data().members,
-                primaryMember,
-                secondaryMember,
-              ),
-            });
-          }
-        }
-      };
-      await replacePrimarySecondary(
-        primaryMember.docRef,
-        selectedMember.docRef,
+      const mergedMember = buildMergedMember(
+        primaryMember,
+        selectedMember,
+        conflictResolutions,
+        metadata,
       );
 
-      deleteMember(selectedMember.docRef);
+      await mergeMembers(
+        primaryMember.docRef,
+        selectedMember.docRef,
+        mergedMember,
+      );
     };
 
     try {
@@ -284,13 +119,6 @@ export default function MergeMember({
     setShowConflicts(false);
     setConflictResolutions({});
     setLoading(false);
-  };
-
-  const getMetadataDisplayValue = (metadataItem: any, value: string) => {
-    if (metadataItem.type === "select") {
-      return (metadataItem as MetadataSelectModel).values[value] || value;
-    }
-    return value;
   };
 
   const conflicts = selectedMember ? detectConflicts() : [];
