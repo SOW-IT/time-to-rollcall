@@ -33,13 +33,15 @@ import { GroupModel } from "@/models/Group";
 import { TagModel } from "@/models/Tag";
 import { updateGroup } from "@/lib/groups";
 import EditGroup from "./group/EditGroup";
-import { promiseToast } from "@/helper/Toast";
+import { promiseToast, successToast } from "@/helper/Toast";
 import DeleteConfirmation from "./DeleteConfirmation";
 import { MetadataModel } from "@/models/Metadata";
 import EditMetadata from "./members/EditMetadata";
 import { editMetadatas } from "@/lib/metadata";
 import ExportEvent from "./event/ExportEvent";
 import { currentYearStr } from "@/helper/Time";
+import { linkWithPopup } from "firebase/auth";
+import { auth, googleAuthProvider } from "@/lib/firebase";
 
 export default function Topbar({
   year,
@@ -81,7 +83,7 @@ export default function Topbar({
         updateEvent(group.id, submitEventForm),
         "Updating event...",
         "Event Updated!",
-        "Could not update event."
+        "Could not update event.",
       );
       closeModal();
     }
@@ -119,6 +121,7 @@ export default function Topbar({
     MetadataModel[] | null | undefined
   >(null);
   const [deleteMetadatas, setDeleteMetadatas] = useState<MetadataModel[]>([]);
+  const [disableButton, setDisableButton] = useState<boolean>(false);
 
   function closeDeleteConfirmationModal() {
     openModal();
@@ -146,7 +149,7 @@ export default function Topbar({
         updateGroup(submitGroupForm, submitTagsForm, deleteTags),
         "Updating Group...",
         "Group Updated!",
-        "Could not update group."
+        "Could not update group.",
       );
     }
     setDeleteTags([]);
@@ -161,7 +164,7 @@ export default function Topbar({
         editMetadatas(group.id, metadatas, deleteMetadatas),
         "Updating Metadata...",
         "Metadata Updated!",
-        "Could not update group."
+        "Could not update group.",
       );
     }
     setDeleteMetadatas([]);
@@ -190,6 +193,25 @@ export default function Topbar({
   }, [group, tags, metadata]);
 
   const disabled = currentYearStr !== year;
+
+  const alreadyLinkedWithGoogle = () =>
+    auth.currentUser?.providerData.find(
+      (provider) => provider.providerId === "google.com",
+    )
+      ? true
+      : false;
+
+  const linkWithGoogle = () => {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setDisableButton(true);
+      linkWithPopup(currentUser, googleAuthProvider)
+        .then(() =>
+          successToast("You have successfully linked your Google Account!"),
+        )
+        .catch(() => setDisableButton(false));
+    }
+  };
 
   return (
     <div>
@@ -276,6 +298,15 @@ export default function Topbar({
         ) : (
           <div />
         )}
+        {!alreadyLinkedWithGoogle() && !disableButton && (
+          <button
+            disabled={disableButton}
+            className="bg-blue-300 p-2 text-sm rounded"
+            onClick={() => linkWithGoogle()}
+          >
+            Link Account With Google
+          </button>
+        )}
         {year && disabled && (
           <button
             className="rounded-lg bg-gray-200 p-1 px-2 font-bold hover:bg-gray-400 active:bg-gray-400"
@@ -337,7 +368,12 @@ export default function Topbar({
                 className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={() =>
                   router.push(
-                    Path.Group + "/" + group.id + "/" + year + GroupPath.Metrics
+                    Path.Group +
+                      "/" +
+                      group.id +
+                      "/" +
+                      year +
+                      GroupPath.Metrics,
                   )
                 }
               />
@@ -355,7 +391,12 @@ export default function Topbar({
                 className="cursor-pointer w-7 h-7 text-gray-500 hover:text-black active:text-black"
                 onClick={() =>
                   router.push(
-                    Path.Group + "/" + group.id + "/" + year + GroupPath.Members
+                    Path.Group +
+                      "/" +
+                      group.id +
+                      "/" +
+                      year +
+                      GroupPath.Members,
                   )
                 }
               />

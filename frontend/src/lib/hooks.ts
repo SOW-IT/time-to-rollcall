@@ -37,7 +37,7 @@ export function useUserListener() {
     firestore,
     "users",
     id,
-    !loadingAuth
+    !loadingAuth,
   );
 
   return userData ? ({ ...userAuth, ...userData, id } as User) : userData;
@@ -45,7 +45,7 @@ export function useUserListener() {
 
 export function useGroupListener(
   user: User | null | undefined,
-  groupId: string
+  groupId: string,
 ) {
   const router = useRouter();
   const onBeforeFetch = async () => {
@@ -57,7 +57,7 @@ export function useGroupListener(
   const onAfterFetch = async (data: GroupModel | null | undefined) => {
     if (data === undefined && user) {
       removeGroupFromUserGroups(groupId, user?.id).then(() =>
-        router.push(Path.Group)
+        router.push(Path.Group),
       );
     }
   };
@@ -68,7 +68,7 @@ export function useGroupListener(
     groupId,
     user !== null,
     onBeforeFetch,
-    onAfterFetch
+    onAfterFetch,
   );
 
   return group;
@@ -83,7 +83,7 @@ export function useGroupsListener(user: User | null | undefined) {
     undefined,
     undefined,
     undefined,
-    where(documentId(), "in", user?.groups ?? ["placeholder"])
+    where(documentId(), "in", user?.groups ?? ["placeholder"]),
   );
 
   return groups;
@@ -92,7 +92,7 @@ export function useGroupsListener(user: User | null | undefined) {
 export function useMembersListener(
   user: User | null | undefined,
   year?: string,
-  groupId?: string
+  groupId?: string,
 ) {
   const { data: members } = useFirestoreCol<MemberModel>(
     firestore,
@@ -100,7 +100,7 @@ export function useMembersListener(
     user !== null && groupId && year && user?.groups?.includes(groupId)
       ? true
       : false,
-    orderBy("name", "asc")
+    orderBy("name", "asc"),
   );
   const { data: members1 } = useFirestoreCol<MemberModel>(
     firestore,
@@ -112,7 +112,7 @@ export function useMembersListener(
       universityIds[University.USYD]
       ? true
       : false,
-    orderBy("name", "asc")
+    orderBy("name", "asc"),
   );
   const { data: members2 } = useFirestoreCol<MemberModel>(
     firestore,
@@ -124,7 +124,7 @@ export function useMembersListener(
       universityIds[University.UTS]
       ? true
       : false,
-    orderBy("name", "asc")
+    orderBy("name", "asc"),
   );
   const { data: members3 } = useFirestoreCol<MemberModel>(
     firestore,
@@ -136,7 +136,7 @@ export function useMembersListener(
       universityIds[University.UNSW]
       ? true
       : false,
-    orderBy("name", "asc")
+    orderBy("name", "asc"),
   );
   const { data: members4 } = useFirestoreCol<MemberModel>(
     firestore,
@@ -148,7 +148,7 @@ export function useMembersListener(
       universityIds[University.MACQ]
       ? true
       : false,
-    orderBy("name", "asc")
+    orderBy("name", "asc"),
   );
   const { data: members5 } = useFirestoreCol<MemberModel>(
     firestore,
@@ -160,7 +160,7 @@ export function useMembersListener(
       universityIds[University.SOW]
       ? true
       : false,
-    orderBy("name", "asc")
+    orderBy("name", "asc"),
   );
   const allMembers = useMemo(() => {
     return members
@@ -175,25 +175,25 @@ export function useMembersListener(
 
 export function useMetadataListener(
   user: User | null | undefined,
-  groupId?: string
+  groupId?: string,
 ) {
   const { data: metadata } = useFirestoreCol<MetadataModel>(
     firestore,
     `groups/${groupId}/metadata`,
     user !== null && groupId && user?.groups?.includes(groupId) ? true : false,
-    orderBy("order", "asc")
+    orderBy("order", "asc"),
   );
   return metadata;
 }
 
 export function useTagsListener(
   user: User | null | undefined,
-  groupId?: string
+  groupId?: string,
 ) {
   const { data: tags } = useFirestoreCol<MemberModel>(
     firestore,
     `groups/${groupId}/tags`,
-    user !== null && groupId && user?.groups?.includes(groupId) ? true : false
+    user !== null && groupId && user?.groups?.includes(groupId) ? true : false,
   );
   return tags;
 }
@@ -201,7 +201,7 @@ export function useTagsListener(
 export function useEventsListener(
   user: User | null | undefined,
   year: string,
-  groupId?: string
+  groupId?: string,
 ) {
   const { data: events } = useFirestoreCol<EventModel>(
     firestore,
@@ -212,7 +212,7 @@ export function useEventsListener(
     undefined,
     "members",
     where("dateStart", ">=", new Date(`${year}-01-01`)),
-    where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`))
+    where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
   );
   const { data: events1 } = useFirestoreCol<EventModel>(
     firestore,
@@ -229,7 +229,7 @@ export function useEventsListener(
     "members",
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
-    where("collaboration", "array-contains", groupId)
+    where("collaboration", "array-contains", groupId),
   );
   const { data: events2 } = useFirestoreCol<EventModel>(
     firestore,
@@ -246,7 +246,7 @@ export function useEventsListener(
     "members",
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
-    where("collaboration", "array-contains", groupId)
+    where("collaboration", "array-contains", groupId),
   );
   const { data: events3 } = useFirestoreCol<EventModel>(
     firestore,
@@ -263,7 +263,7 @@ export function useEventsListener(
     "members",
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
-    where("collaboration", "array-contains", groupId)
+    where("collaboration", "array-contains", groupId),
   );
   const { data: events4 } = useFirestoreCol<EventModel>(
     firestore,
@@ -280,7 +280,7 @@ export function useEventsListener(
     "members",
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
-    where("collaboration", "array-contains", groupId)
+    where("collaboration", "array-contains", groupId),
   );
   const { data: events5 } = useFirestoreCol<EventModel>(
     firestore,
@@ -297,7 +297,7 @@ export function useEventsListener(
     "members",
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
-    where("collaboration", "array-contains", groupId)
+    where("collaboration", "array-contains", groupId),
   );
   return events
     ?.map((e) => ({
@@ -308,29 +308,29 @@ export function useEventsListener(
       events1?.map((e) => ({
         ...e,
         groupId: universityIds[University.USYD],
-      })) ?? []
+      })) ?? [],
     )
     .concat(
       events2?.map((e) => ({
         ...e,
         groupId: universityIds[University.UNSW],
-      })) ?? []
+      })) ?? [],
     )
     .concat(
       events3?.map((e) => ({ ...e, groupId: universityIds[University.UTS] })) ??
-        []
+        [],
     )
     .concat(
       events4?.map((e) => ({
         ...e,
         groupId: universityIds[University.MACQ],
-      })) ?? []
+      })) ?? [],
     )
     .concat(
       events5?.map((e) => ({
         ...e,
         groupId: universityIds[University.SOW],
-      })) ?? []
+      })) ?? [],
     )
     .sort((a, b) => (a.dateStart < b.dateStart ? 1 : -1));
 }
@@ -338,7 +338,7 @@ export function useEventsListener(
 export function useEventListener(
   user: User | null | undefined,
   groupId: string,
-  eventId: string
+  eventId: string,
 ) {
   const { data: event } = useFirestoreDoc<EventModel>(
     firestore,
@@ -349,7 +349,7 @@ export function useEventListener(
       if (user && !user.groups?.includes(groupId)) {
         await addGroupToUserGroups(groupId, user?.id);
       }
-    }
+    },
   );
 
   return event;
@@ -378,17 +378,17 @@ const useFirestoreCol = <T>(
         constraints && orderBy
           ? query(collection(db, col), ...constraints, orderBy)
           : constraints
-          ? query(collection(db, col), ...constraints)
-          : orderBy
-          ? query(collection(db, col), orderBy)
-          : collection(db, col);
+            ? query(collection(db, col), ...constraints)
+            : orderBy
+              ? query(collection(db, col), orderBy)
+              : collection(db, col);
 
       const unsubscribe = onSnapshot(
         docRef,
         async (document) => {
           const colData = (await convertCollectionToJavascript(
             document.docs,
-            dontHandleField
+            dontHandleField,
           )) as T[];
           if (colData.length === 0) {
             setData([]);
@@ -408,7 +408,7 @@ const useFirestoreCol = <T>(
           setError(error);
           setData([]);
           setLoading(false);
-        }
+        },
       );
       return () => unsubscribe();
     };
@@ -428,7 +428,7 @@ const useFirestoreDoc = <T>(
   docId: string,
   trigger: boolean,
   onBeforeFetch?: () => Promise<void>,
-  onAfterFetch?: (data: T | null | undefined) => void
+  onAfterFetch?: (data: T | null | undefined) => void,
 ) => {
   const [data, setData] = useState<T | null | undefined>(null);
   const [error, setError] = useState<FirestoreError | null>(null);
@@ -458,7 +458,7 @@ const useFirestoreDoc = <T>(
         (error) => {
           setError(error);
           setData(undefined);
-        }
+        },
       );
       return () => unsubscribe();
     };
