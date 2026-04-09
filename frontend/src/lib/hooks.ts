@@ -19,6 +19,7 @@ import {
   documentId,
   Firestore,
   FirestoreError,
+  limit,
   onSnapshot,
   orderBy,
   query,
@@ -83,6 +84,7 @@ export function useGroupsListener(user: User | null | undefined) {
     undefined,
     undefined,
     undefined,
+    undefined,
     where(documentId(), "in", user?.groups ?? ["placeholder"]),
   );
 
@@ -93,6 +95,7 @@ export function useMembersListener(
   user: User | null | undefined,
   year?: string,
   groupId?: string,
+  event?: EventModel | null | undefined,
 ) {
   const { data: members } = useFirestoreCol<MemberModel>(
     firestore,
@@ -101,75 +104,23 @@ export function useMembersListener(
       ? true
       : false,
     orderBy("name", "asc"),
+    undefined,
+    undefined,
+    undefined,
+    50,
   );
-  const { data: members1 } = useFirestoreCol<MemberModel>(
-    firestore,
-    `groups/${universityIds[University.USYD]}/members/${year}/members`,
-    user !== null &&
-      Object.values(universityIds).includes(groupId ?? "") &&
-      groupId !== universityIds[University.USYD] &&
-      year &&
-      universityIds[University.USYD]
-      ? true
-      : false,
-    orderBy("name", "asc"),
-  );
-  const { data: members2 } = useFirestoreCol<MemberModel>(
-    firestore,
-    `groups/${universityIds[University.UTS]}/members/${year}/members`,
-    user !== null &&
-      Object.values(universityIds).includes(groupId ?? "") &&
-      groupId !== universityIds[University.UTS] &&
-      year &&
-      universityIds[University.UTS]
-      ? true
-      : false,
-    orderBy("name", "asc"),
-  );
-  const { data: members3 } = useFirestoreCol<MemberModel>(
-    firestore,
-    `groups/${universityIds[University.UNSW]}/members/${year}/members`,
-    user !== null &&
-      Object.values(universityIds).includes(groupId ?? "") &&
-      groupId !== universityIds[University.UNSW] &&
-      year &&
-      universityIds[University.UNSW]
-      ? true
-      : false,
-    orderBy("name", "asc"),
-  );
-  const { data: members4 } = useFirestoreCol<MemberModel>(
-    firestore,
-    `groups/${universityIds[University.MACQ]}/members/${year}/members`,
-    user !== null &&
-      Object.values(universityIds).includes(groupId ?? "") &&
-      groupId !== universityIds[University.MACQ] &&
-      year &&
-      universityIds[University.MACQ]
-      ? true
-      : false,
-    orderBy("name", "asc"),
-  );
-  const { data: members5 } = useFirestoreCol<MemberModel>(
-    firestore,
-    `groups/${universityIds[University.SOW]}/members/${year}/members`,
-    user !== null &&
-      Object.values(universityIds).includes(groupId ?? "") &&
-      groupId !== universityIds[University.SOW] &&
-      year &&
-      universityIds[University.SOW]
-      ? true
-      : false,
-    orderBy("name", "asc"),
-  );
+  const signedInMembers = useMemo(() => {
+    if (!event || !event.members) {
+      return [];
+    }
+    return event.members.map((m: any) => ({
+      ...m.member,
+      signInTime: m.signInTime,
+    }));
+  }, [event]);
   const allMembers = useMemo(() => {
-    return members
-      ?.concat(members1 ?? [])
-      .concat(members2 ?? [])
-      .concat(members3 ?? [])
-      .concat(members4 ?? [])
-      .concat(members5 ?? []);
-  }, [members, members1, members2, members3, members4, members5]); // Dependencies are the six result arrays
+    return members?.concat(signedInMembers ?? []);
+  }, [members, signedInMembers]);
   return allMembers;
 }
 
@@ -211,6 +162,7 @@ export function useEventsListener(
     undefined,
     undefined,
     "members",
+    undefined,
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
   );
@@ -227,6 +179,7 @@ export function useEventsListener(
     undefined,
     undefined,
     "members",
+    undefined,
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
     where("collaboration", "array-contains", groupId),
@@ -244,6 +197,7 @@ export function useEventsListener(
     undefined,
     undefined,
     "members",
+    undefined,
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
     where("collaboration", "array-contains", groupId),
@@ -261,6 +215,7 @@ export function useEventsListener(
     undefined,
     undefined,
     "members",
+    undefined,
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
     where("collaboration", "array-contains", groupId),
@@ -278,6 +233,7 @@ export function useEventsListener(
     undefined,
     undefined,
     "members",
+    undefined,
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
     where("collaboration", "array-contains", groupId),
@@ -295,6 +251,7 @@ export function useEventsListener(
     undefined,
     undefined,
     "members",
+    undefined,
     where("dateStart", ">=", new Date(`${year}-01-01`)),
     where("dateStart", "<=", new Date(`${Number(year) + 1}-01-01`)),
     where("collaboration", "array-contains", groupId),
@@ -363,6 +320,7 @@ const useFirestoreCol = <T>(
   onBeforeFetch?: () => Promise<void>,
   onAfterFetch?: (data: T[] | null) => void,
   dontHandleField?: string,
+  limitCount?: number,
   ...constraints: QueryFieldFilterConstraint[]
 ) => {
   const [data, setData] = useState<T[] | null>(null);
@@ -374,14 +332,22 @@ const useFirestoreCol = <T>(
       if (onBeforeFetch) {
         await onBeforeFetch();
       }
+      const limitConstraint = limitCount ? [limit(limitCount)] : [];
       const docRef =
-        constraints && orderBy
-          ? query(collection(db, col), ...constraints, orderBy)
-          : constraints
-            ? query(collection(db, col), ...constraints)
+        constraints.length > 0 && orderBy
+          ? query(
+              collection(db, col),
+              ...constraints,
+              ...limitConstraint,
+              orderBy,
+            )
+          : constraints.length > 0
+            ? query(collection(db, col), ...constraints, ...limitConstraint)
             : orderBy
-              ? query(collection(db, col), orderBy)
-              : collection(db, col);
+              ? query(collection(db, col), ...limitConstraint, orderBy)
+              : limitConstraint.length > 0
+                ? query(collection(db, col), ...limitConstraint)
+                : collection(db, col);
 
       const unsubscribe = onSnapshot(
         docRef,

@@ -35,8 +35,8 @@ import Draggable from "gsap/dist/Draggable";
 import { useContext, useEffect, useState, useMemo } from "react";
 
 import { FunnelIcon } from "@heroicons/react/24/outline";
-import { useMembersListener } from "@/lib/hooks";
 import { searchNamesPhonetically } from "@/helper/searchQuery";
+import { useMembersListener } from "@/lib/hooks";
 
 gsap.registerPlugin(Draggable, useGSAP);
 
@@ -53,13 +53,13 @@ export default function Event({
   const group = useContext(GroupContext);
   const user = useContext(UserContext);
   const sowYearStr = event ? getSOWYear(event.dateStart).toString() : undefined;
-  const members = useMembersListener(user, sowYearStr, groupId);
+  const members = useMembersListener(user, sowYearStr, groupId, event);
   const [loading, setLoading] = useState(true);
   const [membersNotSignedIn, setMembersNotSignedIn] = useState<MemberModel[]>(
-    []
+    [],
   );
   const [membersSignedIn, setMembersSignedIn] = useState<MemberInformation[]>(
-    []
+    [],
   );
 
   const [loadAnimation, setLoadAnimation] = useState<boolean>(true);
@@ -89,7 +89,7 @@ export default function Event({
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const dietaryRequirements = metadata?.find(
-    (m) => m.key === "Dietary Requirements" && m.type === "select"
+    (m) => m.key === "Dietary Requirements" && m.type === "select",
   ) as MetadataSelectModel | undefined;
 
   function closeModal() {
@@ -101,7 +101,7 @@ export default function Event({
   }
 
   const campus = metadata?.find(
-    (m) => m.key === "Campus" && m.type === "select"
+    (m) => m.key === "Campus" && m.type === "select",
   ) as MetadataSelectModel | undefined;
 
   const toggleFilterDrawer = () => {
@@ -122,7 +122,7 @@ export default function Event({
   const handleSortChange = (
     sortBy: "name" | "metadata" | "signInTime",
     direction: "asc" | "desc",
-    metadataField?: string
+    metadataField?: string,
   ) => {
     setFilterState((prev) => ({
       ...prev,
@@ -145,9 +145,9 @@ export default function Event({
 
   // Apply filters to data
   const applyFilters = <
-    T extends { member?: { metadata?: any }; metadata?: any }
+    T extends { member?: { metadata?: any }; metadata?: any },
   >(
-    data: T[]
+    data: T[],
   ): T[] => {
     if (!metadata || Object.keys(filterState.metadataFilters).length === 0) {
       return data;
@@ -171,10 +171,10 @@ export default function Event({
 
           // Find the metadata value by matching the display value
           const metadataValueId = Object.entries(selectMetadata.values).find(
-            ([_, value]) => value === filterValue
+            ([_, value]) => value === filterValue,
           )?.[0];
           return memberValue === metadataValueId;
-        }
+        },
       );
     });
   };
@@ -182,7 +182,7 @@ export default function Event({
   // Apply search filter by name for MemberModel[] (not signed in)
   const applySearchFilter = (
     data: MemberModel[],
-    query: string
+    query: string,
   ): MemberModel[] => {
     if (!query || query.length === 0) return data;
     return data.filter((member) => searchNamesPhonetically(query, member.name));
@@ -191,11 +191,11 @@ export default function Event({
   // Apply search filter by name for MemberInformation[] (signed in)
   const applySearchFilterSignedIn = (
     data: MemberInformation[],
-    query: string
+    query: string,
   ): MemberInformation[] => {
     if (!query || query.length === 0) return data;
     return data.filter((memberInfo) =>
-      searchNamesPhonetically(query, memberInfo.member.name)
+      searchNamesPhonetically(query, memberInfo.member.name),
     );
   };
 
@@ -205,9 +205,9 @@ export default function Event({
       member?: { name: string; metadata?: any };
       name?: string;
       signInTime?: Date;
-    }
+    },
   >(
-    data: T[]
+    data: T[],
   ): T[] => {
     if (!data.length) return data;
 
@@ -231,7 +231,7 @@ export default function Event({
       case "metadata":
         if (filterState.sortMetadataField) {
           const metadataField = metadata?.find(
-            (m) => m.key === filterState.sortMetadataField
+            (m) => m.key === filterState.sortMetadataField,
           );
           if (metadataField && metadataField.type === "select") {
             const selectMetadata = metadataField as MetadataSelectModel;
@@ -313,7 +313,7 @@ export default function Event({
     if (!membersSignedIn) return 0;
     const searchFiltered = applySearchFilterSignedIn(
       membersSignedIn,
-      searchQuery
+      searchQuery,
     );
     return searchFiltered.length;
   }, [membersSignedIn, searchQuery]);
@@ -324,7 +324,7 @@ export default function Event({
     // Step 1: Apply search filter
     const searchFiltered = applySearchFilterSignedIn(
       membersSignedIn,
-      searchQuery
+      searchQuery,
     );
 
     // Step 2: Apply metadata filters
@@ -340,35 +340,35 @@ export default function Event({
     if (selectedMemberInfo.member.id === "placeholder") {
       const newMember = await createMember(
         campus && selectedMemberInfo.member.metadata
-          ? universityIds[
+          ? (universityIds[
               campus.values[selectedMemberInfo.member.metadata[campus.id]]
-            ] ?? params.groupId
+            ] ?? params.groupId)
           : params.groupId,
         selectedMemberInfo.member,
-        user?.id
+        user?.id,
       );
       await promiseToast<void>(
         addMemberToEvent(groupId, eventId, newMember.docRef),
         "Creating and Adding Member...",
         "Member Created and Added!",
-        "Could not create and added member."
+        "Could not create and added member.",
       );
     } else {
       await promiseToast<void>(
         updateMember(
           selectedMemberInfo.member.docRef,
-          selectedMemberInfo.member
+          selectedMemberInfo.member,
         ),
         "Updating Member...",
         "Member Updated!",
-        "Could not update member."
+        "Could not update member.",
       );
       if (
         previousSignInTime !== selectedMemberInfo.signInTime &&
         event?.members
       ) {
         const index = event.members.findIndex(
-          (m) => m.member.docRef.path === selectedMemberInfo.member.docRef.path
+          (m) => m.member.docRef.path === selectedMemberInfo.member.docRef.path,
         );
         if (index !== -1) {
           await promiseToast<void>(
@@ -379,7 +379,7 @@ export default function Event({
             ]),
             "Updating Sign in time...",
             "Sign in time Updated!",
-            "Could not update sign in time."
+            "Could not update sign in time.",
           );
         }
       }
@@ -405,8 +405,8 @@ export default function Event({
           .filter(
             (m) =>
               !event?.members?.some(
-                (signedIn) => signedIn.member.docRef.path === m.docRef.path
-              )
+                (signedIn) => signedIn.member.docRef.path === m.docRef.path,
+              ),
           ) ?? [];
       let membersSignedIn =
         (event.members
@@ -414,7 +414,7 @@ export default function Event({
           .map((mi) => ({
             ...mi,
             member: members?.find(
-              (m) => m.docRef.path === mi.member.docRef.path
+              (m) => m.docRef.path === mi.member.docRef.path,
             ),
           }))
           .filter((mi) => mi.member !== undefined) as MemberInformation[]) ??
@@ -452,7 +452,7 @@ export default function Event({
       if (
         membersSignedIn.find(
           (msi) =>
-            msi.member.docRef.path === selectedMemberInfo.member.docRef.path
+            msi.member.docRef.path === selectedMemberInfo.member.docRef.path,
         )
       ) {
         await promiseToast<void>(
@@ -461,19 +461,19 @@ export default function Event({
             eventId,
             event.members?.find(
               (m) =>
-                m.member.docRef.path === selectedMemberInfo.member.docRef.path
-            )
+                m.member.docRef.path === selectedMemberInfo.member.docRef.path,
+            ),
           ),
           `Removing ${selectedMemberInfo.member.name}...`,
           `${selectedMemberInfo.member.name} Removed!`,
-          `Could not remove ${selectedMemberInfo.member.name}.`
+          `Could not remove ${selectedMemberInfo.member.name}.`,
         );
       }
       await promiseToast<void>(
         deleteMember(selectedMemberInfo.member.docRef),
         "Deleting Member...",
         "Member Deleted!",
-        "Could not delete member."
+        "Could not delete member.",
       );
     }
     setIsOpen(false);
@@ -590,15 +590,15 @@ export default function Event({
                     member: InitMember(
                       searchInput,
                       metadata?.find(
-                        (m) => m.key === "campus" && m.type === "select"
+                        (m) => m.key === "campus" && m.type === "select",
                       )?.id,
                       Object.entries(
                         (
                           metadata?.find(
-                            (m) => m.key === "campus" && m.type === "select"
+                            (m) => m.key === "campus" && m.type === "select",
                           ) as MetadataSelectModel | undefined
-                        )?.values ?? {}
-                      ).find(([_, v]) => v === group?.name)?.[0]
+                        )?.values ?? {},
+                      ).find(([_, v]) => v === group?.name)?.[0],
                     ),
                     signInTime: new Date(),
                   });
@@ -608,17 +608,17 @@ export default function Event({
                   const { member } = memberInfo;
                   promiseToast<void>(
                     event.members?.some(
-                      (m) => m.member.docRef.path === member.docRef.path
+                      (m) => m.member.docRef.path === member.docRef.path,
                     )
                       ? (() => {
                           throw new Error(
-                            `${member.name} is already a member of the event.`
+                            `${member.name} is already a member of the event.`,
                           );
                         })()
                       : addMemberToEvent(groupId, eventId, member.docRef),
                     `Adding ${member.name}...`,
                     `${member.name} Added!`,
-                    `Could not add ${member.name}.`
+                    `Could not add ${member.name}.`,
                   );
                 }}
                 edit={(memberInfo: MemberInformation) => {
@@ -640,7 +640,7 @@ export default function Event({
                 disabled={!toggleEdit}
                 signedIn={filteredAndSortedMembersSignedIn.slice(
                   0,
-                  indexSignedIn
+                  indexSignedIn,
                 )}
                 filteredCount={
                   filteredAndSortedMembersSignedIn.slice(0, indexSignedIn)
@@ -658,7 +658,7 @@ export default function Event({
                     <span className="text-xs text-gray-500">
                       {
                         Object.values(filterState.metadataFilters).filter(
-                          (v) => v !== "All"
+                          (v) => v !== "All",
                         ).length
                       }{" "}
                       active
@@ -673,12 +673,12 @@ export default function Event({
                       groupId,
                       eventId,
                       event.members?.find(
-                        (m) => m.member.docRef.path === member.docRef.path
-                      )
+                        (m) => m.member.docRef.path === member.docRef.path,
+                      ),
                     ),
                     `Removing ${member.name}...`,
                     `${member.name} Removed!`,
-                    `Could not remove ${member.name}.`
+                    `Could not remove ${member.name}.`,
                   );
                 }}
                 edit={(memberInfo: MemberInformation) => {
@@ -704,15 +704,15 @@ export default function Event({
                     member: InitMember(
                       searchInput,
                       metadata?.find(
-                        (m) => m.key === "campus" && m.type === "select"
+                        (m) => m.key === "campus" && m.type === "select",
                       )?.id,
                       Object.entries(
                         (
                           metadata?.find(
-                            (m) => m.key === "campus" && m.type === "select"
+                            (m) => m.key === "campus" && m.type === "select",
                           ) as MetadataSelectModel | undefined
-                        )?.values ?? {}
-                      ).find(([_, v]) => v === group?.name)?.[0]
+                        )?.values ?? {},
+                      ).find(([_, v]) => v === group?.name)?.[0],
                     ),
                     signInTime: new Date(),
                   });
