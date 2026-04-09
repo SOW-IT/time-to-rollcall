@@ -23,7 +23,7 @@ import {
 import { EventId, EventModel, MemberInformation } from "@/models/Event";
 import { GroupId } from "@/models/Group";
 import { convertTagIdToReference } from "./tags";
-import { convertMemberIdToReference } from "./members";
+
 import { TagModel } from "@/models/Tag";
 
 export async function getEventsAsc(groupId: GroupId) {
@@ -105,7 +105,7 @@ function convertEventToDocument(groupId: GroupId, event: EventModel) {
     members:
       members?.map((m) => ({
         ...m,
-        member: convertMemberIdToReference(groupId, m.member.id),
+        member: m.member.docRef,
       })) ?? [],
   };
 }

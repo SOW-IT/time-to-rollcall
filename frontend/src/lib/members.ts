@@ -15,7 +15,7 @@ import {
 export async function createMember(
   groupId: GroupId,
   member: MemberModel,
-  userId?: UserId
+  userId?: UserId,
 ) {
   const ref = await addDoc(
     collection(
@@ -24,9 +24,9 @@ export async function createMember(
       groupId,
       "members",
       currentSOWYearStr,
-      "members"
+      "members",
     ),
-    convertMemberToDocument(member, userId)
+    convertMemberToDocument(member, userId),
   );
   return {
     ...member,
@@ -38,7 +38,7 @@ export async function createMember(
 
 export async function updateMember(
   docRef: DocumentReference,
-  member: MemberModel
+  member: MemberModel,
 ) {
   await setDoc(docRef, convertMemberToDocument(member));
 }
@@ -60,19 +60,4 @@ function convertMemberToDocument(member: MemberModel, userId?: UserId) {
     };
   }
   return convertToFirestore(memberWithoutId);
-}
-
-export function convertMemberIdToReference(
-  groupId: GroupId,
-  memberId: MemberId
-) {
-  return doc(
-    firestore,
-    "groups",
-    groupId,
-    "members",
-    currentSOWYearStr,
-    "members",
-    memberId
-  );
 }
