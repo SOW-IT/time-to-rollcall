@@ -31,8 +31,8 @@ export async function getEventsAsc(groupId: GroupId) {
     query(
       collection(firestore, "groups", groupId, "events"),
       orderBy("dateStart", "asc"),
-      orderBy("dateEnd", "asc")
-    )
+      orderBy("dateEnd", "asc"),
+    ),
   );
   return (await convertCollectionToJavascript(events.docs)) as EventModel[];
 }
@@ -42,8 +42,8 @@ export async function getEventsDesc(groupId: GroupId) {
     query(
       collection(firestore, "groups", groupId, "events"),
       orderBy("dateEnd", "desc"),
-      orderBy("dateStart", "desc")
-    )
+      orderBy("dateStart", "desc"),
+    ),
   );
   return (await convertCollectionToJavascript(events.docs)) as EventModel[];
 }
@@ -58,18 +58,18 @@ export async function getEventsByTag(groupId: GroupId, tags: TagModel[]) {
       where(
         "tags",
         "array-contains-any",
-        tags.map((t) => doc(firestore, "groups", groupId, "tags", t.id))
+        tags.map((t) => doc(firestore, "groups", groupId, "tags", t.id)),
       ),
       orderBy("dateStart", "asc"),
-      orderBy("dateEnd", "asc")
-    )
+      orderBy("dateEnd", "asc"),
+    ),
   );
   return (await convertCollectionToJavascript(events.docs)) as EventModel[];
 }
 
 export async function getEvent(groupId: GroupId, eventId: EventId) {
   const event = await getDoc(
-    doc(firestore, "groups", groupId, "events", eventId)
+    doc(firestore, "groups", groupId, "events", eventId),
   );
   return (await convertToJavascript(event)) as EventModel;
 }
@@ -81,7 +81,7 @@ export async function submitEvent(groupId: GroupId, event: EventModel) {
     {
       ...convertToFirestore(eventWithoutTags),
       tags: tags.map((t) => doc(firestore, "groups", groupId, "tags", t.id)),
-    }
+    },
   );
   return { ...event, id: addedDoc.id };
 }
@@ -89,7 +89,7 @@ export async function submitEvent(groupId: GroupId, event: EventModel) {
 export async function updateEvent(groupId: GroupId, event: EventModel) {
   await updateDoc(
     doc(firestore, "groups", groupId, "events", event.id),
-    convertEventToDocument(groupId, event)
+    convertEventToDocument(groupId, event),
   );
 }
 
@@ -105,7 +105,7 @@ function convertEventToDocument(groupId: GroupId, event: EventModel) {
     members:
       members?.map((m) => ({
         ...m,
-        member: m.member.docRef,
+        member: m.member.docRef ?? m.member,
       })) ?? [],
   };
 }
@@ -113,7 +113,7 @@ function convertEventToDocument(groupId: GroupId, event: EventModel) {
 export async function updateEventMembers(
   groupId: GroupId,
   eventId: EventId,
-  members: MemberInformation[]
+  members: MemberInformation[],
 ) {
   await updateDoc(doc(firestore, "groups", groupId, "events", eventId), {
     members:
@@ -127,7 +127,7 @@ export async function updateEventMembers(
 export async function addMemberToEvent(
   groupId: GroupId,
   eventId: EventId,
-  memberDocRef: DocumentReference
+  memberDocRef: DocumentReference,
 ) {
   await updateDoc(doc(firestore, "groups", groupId, "events", eventId), {
     members: arrayUnion({
@@ -140,7 +140,7 @@ export async function addMemberToEvent(
 export async function removeMemberFromEvent(
   groupId: GroupId,
   eventId: EventId,
-  memberInfo?: MemberInformation
+  memberInfo?: MemberInformation,
 ) {
   memberInfo &&
     memberInfo.signInTime &&
