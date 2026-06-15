@@ -71,16 +71,17 @@ export default function Metrics({
         }
       }
       for (const tag of tags) {
+        const attendance = eventsByTag[tag.name].attendance;
+        const total = attendance.reduce(
+          (accumulator, currentValue) => accumulator + currentValue.Attendance,
+          0
+        );
+        // Guard against division by zero for tags with no events (avoids "NaN").
+        const average = attendance.length > 0 ? total / attendance.length : 0;
         eventsByTag[tag.name].average = {
           name: tag.name,
           colour: tag.colour,
-          Average: Number(
-            eventsByTag[tag.name].attendance.reduce(
-              (accumulator, currentValue) =>
-                accumulator + currentValue.Attendance,
-              0
-            ) / eventsByTag[tag.name].attendance.length
-          ).toFixed(2),
+          Average: average.toFixed(2),
         };
       }
       setMetricByTag(eventsByTag);

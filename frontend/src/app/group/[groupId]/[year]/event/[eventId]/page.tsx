@@ -590,12 +590,12 @@ export default function Event({
                     member: InitMember(
                       searchInput,
                       metadata?.find(
-                        (m) => m.key === "campus" && m.type === "select"
+                        (m) => m.key === "Campus" && m.type === "select"
                       )?.id,
                       Object.entries(
                         (
                           metadata?.find(
-                            (m) => m.key === "campus" && m.type === "select"
+                            (m) => m.key === "Campus" && m.type === "select"
                           ) as MetadataSelectModel | undefined
                         )?.values ?? {}
                       ).find(([_, v]) => v === group?.name)?.[0]
@@ -704,12 +704,12 @@ export default function Event({
                     member: InitMember(
                       searchInput,
                       metadata?.find(
-                        (m) => m.key === "campus" && m.type === "select"
+                        (m) => m.key === "Campus" && m.type === "select"
                       )?.id,
                       Object.entries(
                         (
                           metadata?.find(
-                            (m) => m.key === "campus" && m.type === "select"
+                            (m) => m.key === "Campus" && m.type === "select"
                           ) as MetadataSelectModel | undefined
                         )?.values ?? {}
                       ).find(([_, v]) => v === group?.name)?.[0]
