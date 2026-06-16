@@ -14,7 +14,7 @@ import { deleteEvent, submitEvent, updateEvent } from "@/lib/events";
 import { EventModel, InitEvent } from "@/models/Event";
 import { GroupId } from "@/models/Group";
 import { TagId } from "@/models/Tag";
-import { universityNames } from "@/models/University";
+import { universityColours, universityNames } from "@/models/University";
 import {
   Listbox,
   ListboxButton,
@@ -25,6 +25,14 @@ import { ArrowDownTrayIcon, CheckIcon } from "@heroicons/react/16/solid";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
+
+// Convert a "#RRGGBB" hex colour to an rgba() string with the given alpha.
+function hexToRgba(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export default function Group({
   params,
@@ -238,11 +246,25 @@ export default function Group({
             </Listbox>
           </div>
           {group &&
-            showedEvents.map((event, i) => (
+            showedEvents.map((event, i) => {
+              // When the event is owned by another group (shown here because of
+              // a collaboration), tint the whole card with the owner's colour
+              // so it is clear the event belongs to a different group.
+              const isExternalOwner =
+                !!event.groupId && event.groupId !== group.id;
+              const ownerColour = isExternalOwner
+                ? universityColours[universityNames[event.groupId!]]
+                : undefined;
+              return (
               <div key={i}>
                 <hr className="h-[1px] border-t-0 bg-neutral-300" />
                 <div
                   className="cursor-pointer px-4 py-6"
+                  style={
+                    ownerColour
+                      ? { backgroundColor: hexToRgba(ownerColour, 0.12) }
+                      : undefined
+                  }
                   onClick={() =>
                     router.push(
                       `${Path.Group}/${event.groupId ?? group.id}/${
@@ -282,7 +304,8 @@ export default function Group({
                   />
                 </div>
               </div>
-            ))}
+              );
+            })}
           {showedEvents.length > 0 && (
             <hr className="h-[1px] border-t-0 bg-neutral-300" />
           )}

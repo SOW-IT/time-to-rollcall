@@ -370,6 +370,9 @@ const useFirestoreCol = <T>(
   const [error, setError] = useState<FirestoreError | null>(null);
 
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+
     const fetchData = async () => {
       if (onBeforeFetch) {
         await onBeforeFetch();
@@ -383,7 +386,7 @@ const useFirestoreCol = <T>(
               ? query(collection(db, col), orderBy)
               : collection(db, col);
 
-      const unsubscribe = onSnapshot(
+      unsubscribe = onSnapshot(
         docRef,
         async (document) => {
           const colData = (await convertCollectionToJavascript(
@@ -410,12 +413,25 @@ const useFirestoreCol = <T>(
           setLoading(false);
         },
       );
-      return () => unsubscribe();
+
+      // If the effect was cleaned up before the async subscription resolved,
+      // immediately tear the listener down to avoid leaking it.
+      if (cancelled) {
+        unsubscribe();
+        unsubscribe = undefined;
+      }
     };
 
     if (trigger) {
       fetchData();
     }
+
+    return () => {
+      cancelled = true;
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
     // eslint-disable-next-line
   }, [db, col, trigger]);
 
@@ -434,12 +450,15 @@ const useFirestoreDoc = <T>(
   const [error, setError] = useState<FirestoreError | null>(null);
 
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+
     const fetchData = async () => {
       if (onBeforeFetch) {
         await onBeforeFetch();
       }
       const docRef = doc(db, collection, docId);
-      const unsubscribe = onSnapshot(
+      unsubscribe = onSnapshot(
         docRef,
         async (document) => {
           if (document.exists()) {
@@ -460,12 +479,25 @@ const useFirestoreDoc = <T>(
           setData(undefined);
         },
       );
-      return () => unsubscribe();
+
+      // If the effect was cleaned up before the async subscription resolved,
+      // immediately tear the listener down to avoid leaking it.
+      if (cancelled) {
+        unsubscribe();
+        unsubscribe = undefined;
+      }
     };
 
     if (trigger) {
       fetchData();
     }
+
+    return () => {
+      cancelled = true;
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
     // eslint-disable-next-line
   }, [db, collection, docId, trigger]);
 

@@ -62,7 +62,9 @@ export default function EventComponent({
           {after && <p className="text-xs font-medium text-gray-600">ENDED</p>}
         </div>
       </div>
-      {collabUnis && collabUnis.length > 0 && (
+      {/* Only show the collaboration block when there is at least one
+          collaborator beyond the owner (collabUnis[0] is always the owner). */}
+      {collabUnis && collabUnis.length > 1 && (
         <div className="flex flex-wrap mt-1">
           <div className="flex w-full -mb-1 ml-4">
             <p
